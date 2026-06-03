@@ -139,7 +139,11 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BaseApp.h" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="TheseusApp.cpp" />
+    <ClCompile Include="TheseusApp.h" />
+    <ClCompile Include="Timer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -33,5 +33,17 @@
     <ClCompile Include="main.cpp">
       <Filter>Code\Source</Filter>
     </ClCompile>
+    <ClCompile Include="BaseApp.h">
+      <Filter>Code\Header</Filter>
+    </ClCompile>
+    <ClCompile Include="TheseusApp.h">
+      <Filter>Code\Header</Filter>
+    </ClCompile>
+    <ClCompile Include="TheseusApp.cpp">
+      <Filter>Code\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.h">
+      <Filter>Code\Header</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
