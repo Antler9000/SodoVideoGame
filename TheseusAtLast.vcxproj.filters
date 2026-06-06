@@ -30,20 +30,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClInclude Include="Code\Header\BaseApp.h">
+      <Filter>Code\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Header\TheseusApp.h">
+      <Filter>Code\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Header\Timer.h">
+      <Filter>Code\Header</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Code\Source\main.cpp">
       <Filter>Code\Source</Filter>
     </ClCompile>
-    <ClCompile Include="BaseApp.h">
-      <Filter>Code\Header</Filter>
-    </ClCompile>
-    <ClCompile Include="TheseusApp.h">
-      <Filter>Code\Header</Filter>
-    </ClCompile>
-    <ClCompile Include="TheseusApp.cpp">
+    <ClCompile Include="Code\Source\TheseusApp.cpp">
       <Filter>Code\Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Timer.h">
-      <Filter>Code\Header</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
