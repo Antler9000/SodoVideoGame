@@ -5,7 +5,7 @@
 
 class TheseusApp : public BaseApp<TheseusApp>
 {
-	//SPECIFIER : 부모 클래스의 WindowProcedure 정적 메소드에서 본 자식 클래스의 HandleMessage를 직접 호출할 수 있도록 친구 선언을 해줌
+	//NOTE : 부모 클래스의 WindowProcedure 정적 메소드에서 본 자식 클래스의 HandleMessage를 직접 호출할 수 있도록 친구 선언을 해줌
 	friend BaseApp<TheseusApp>;
 
 public:
@@ -28,7 +28,7 @@ public:
 
 	}
 
-	void RunMessageLoop()
+	int RunMessageLoop()
 	{
 		MSG msg = { };
 
@@ -46,6 +46,8 @@ public:
 				PrintCaption();
 			}
 		}
+
+		return (int)msg.wParam;
 	}
 
 private:

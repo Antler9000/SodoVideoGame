@@ -34,6 +34,8 @@ LRESULT TheseusApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+		//TODO :	이는 픽셀 단위의 마우스 커서 변화를 감지하므로, 정확도가 떨어지고 마우스 포인터 속도 설정에 영향을 받음
+		//			따라서 인게임 마우스 조작의 경우엔 본 메시지가 아니라 마우스의 이동 자체를 받아오도록 WM_INPUT을 사용하자
 		//TODO :	idle 루프에서 아래 로직을 수행할 수 있도록 필요한 정보를 전달해주기만 하자
 		//			-좌클릭 드래그 도중엔 유닛 선택 직사각형 영역이나 일자 스킬의 방향 표시 영역을 업데이트해야 한다
 		//			-우클릭 드래그 도중엔 차량 회전 지시 방향의 화살표 표시를 업데이트해야 한다
@@ -174,7 +176,7 @@ LRESULT TheseusApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 
-		//NOTE : ESC를 이용한 종료를 처리
+		//NOTE : ESC를 이용한 종료를 처리함
 		//TODO : 후진 이동 명령, 수리, 능력 사용 등의 단축키 입력을 감지해서 idle 루프에 전달해주기만 하자 
 		case WM_KEYDOWN:
 		{
@@ -189,7 +191,7 @@ LRESULT TheseusApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 
-		//NOTE : ALT+F4 혹은 우상단 창닫기 버튼을 이용한 종료를 처리
+		//NOTE : ALT+F4 혹은 우상단 창닫기 버튼을 이용한 종료를 처리함
 		case WM_CLOSE:
 		{
 			if (MessageBoxW(m_hWnd, L"어플리케이션을 종료합니까?", L"종료 문구", MB_OKCANCEL) == IDOK)

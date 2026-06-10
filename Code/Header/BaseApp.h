@@ -1,7 +1,7 @@
 #pragma once
 #include <windows.h>
 
-//PARAMETER : WindowProc에서 생성할 pThis 객체의 클래스가 자식 클래스일 수 있도록 템플릿 타입 매개변수를 사용함
+//NOTE : WindowProc에서 생성할 pThis 객체의 클래스가 자식 클래스일 수 있도록 템플릿 타입 매개변수를 사용함
 template <class DerievedApp>
 class BaseApp
 {
@@ -103,6 +103,7 @@ public:
 		m_isCreated = true;
 
 		ShowWindow(m_hWnd, show);
+		UpdateWindow(m_hWnd);
 
 		return true;
 	}
