@@ -1,15 +1,23 @@
 #include <windows.h>
-#include "TheseusApp.h"
+#include "SteelBalletApp.h"
 
-extern "C" { __declspec(dllexport) extern const UINT D3D12SDKersion = 619;  }
+//NOTE :	링크 대상 라이브러리들을 명시함
+//			이들은 기본 포함 라이브러리 디렉토리에 위치함
+#pragma comment(lib, "d3dcompiler.lib")
+#pragma comment(lib, "D3D12.lib")
+#pragma comment(lib, "dxgi.lib")
+
+//NOTE : NuGet으로 설치한 DirectX12 Agility SDK 버전을 명시함
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 619;  }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\";  }
 
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR pCmdLine, _In_ int nCmdShow)
 {
+	//NOTE : 컴파일 경고를 지우기 위해 작성함
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(pCmdLine);
 
-	TheseusApp appInstance;
+	SteelBalletApp appInstance;
 	
 	if (appInstance.Create(hInstance, nCmdShow) == false)
 	{

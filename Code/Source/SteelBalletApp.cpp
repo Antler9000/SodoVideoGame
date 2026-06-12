@@ -1,10 +1,10 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <wchar.h>
-#include "TheseusApp.h"
+#include "SteelBalletApp.h"
 
-//NOTE : SetWindowTextW를 너무 자주 호출하면 시스템 부하로 인해 윈도우 전체가 먹통이 되니 반복문에 텀을 주자
-void TheseusApp::PrintCaption()
+//NOTE : SetWindowTextW를 너무 자주 호출하면 시스템 부하로 인해 윈도우 전체가 먹통이 되니 반복에 텀을 주자
+void SteelBalletApp::PrintCaption()
 {
 	if (m_timer.GetNotCaptionedMilliSeconds() > 100.0f)
 	{
@@ -28,12 +28,13 @@ void TheseusApp::PrintCaption()
 }
 
 //TODO :	각 메시지 처리를 함수로 만들어서 가독성을 높이자
-//NOTE :	WindowProc이 수행 중에는 해당 스레드의 메시지 큐에 있는 다른 메시지를 처리하지 못하므로,
-//			되도록 WindowProcedure 안에서는 짧은 로직만 수행하도록 하고, 긴 대기가 필요한 로직은 별도 스레드로 처리하자
-LRESULT TheseusApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+//NOTE :	WindowProc이 수행 중에는 해당 스레드의 메시지 큐에 쌓인 다른 메시지들을 처리하지 못하므로,
+//			되도록 이 안에서는 짧은 로직만 수행하도록 하고, 긴 대기가 필요한 로직은 별도 스레드로 처리하자
+LRESULT SteelBalletApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+		//TODO :	DirectXTK12에 인풋과 관련하여 사용 가능한 기능이 있는지 둘러보자
 		//TODO :	이는 픽셀 단위의 마우스 커서 변화를 감지하므로, 정확도가 떨어지고 마우스 포인터 속도 설정에 영향을 받음
 		//			따라서 인게임 마우스 조작의 경우엔 본 메시지가 아니라 마우스의 이동 자체를 받아오도록 WM_INPUT을 사용하자
 		//TODO :	idle 루프에서 아래 로직을 수행할 수 있도록 필요한 정보를 전달해주기만 하자

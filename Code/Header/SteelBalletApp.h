@@ -3,14 +3,14 @@
 #include "BaseApp.h"
 #include "Timer.h"
 
-class TheseusApp : public BaseApp<TheseusApp>
+class SteelBalletApp : public BaseApp<SteelBalletApp>
 {
 	//NOTE : 부모 클래스의 WindowProcedure 정적 메소드에서 본 자식 클래스의 HandleMessage를 직접 호출할 수 있도록 친구 선언을 해줌
-	friend BaseApp<TheseusApp>;
+	friend BaseApp<SteelBalletApp>;
 
 public:
 
-	TheseusApp() : BaseApp(L"Theseus At Last")
+	SteelBalletApp() : BaseApp(L"Steel Ballet")
 	{
 		m_isClicked = false;
 
@@ -23,7 +23,7 @@ public:
 		m_scrollDelta = 0;
 	}
 
-	~TheseusApp()
+	~SteelBalletApp()
 	{
 
 	}
