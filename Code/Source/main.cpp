@@ -1,6 +1,10 @@
 #include <windows.h>
 #include "SteelBalletApp.h"
 
+//NOTE : NuGet 설치 확인용
+#include "d3d12.h"
+#include <wrl/client.h>
+
 //NOTE :	링크 대상 라이브러리들을 명시함
 //			이들은 기본 포함 라이브러리 디렉토리에 위치함
 #pragma comment(lib, "d3dcompiler.lib")
@@ -17,8 +21,12 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(pCmdLine);
 
+	//NOTE : NuGet 설치 확인용
+	using Microsoft::WRL::ComPtr;
+	ComPtr<ID3D12Device> device;
+
 	SteelBalletApp appInstance;
-	
+
 	if (appInstance.Create(hInstance, nCmdShow) == false)
 	{
 		return 0;

@@ -365,7 +365,17 @@
 
 - 사용 방식
   - NuGet 패키지 관리 (Microsoft.Direct3D.D3D12)
-  - 내부 직접 포함 X
+  
+- 복원 위치
+  - "SteelBallet\packages\Microsoft.Direct3D.D3D12.<버전명>"
+
+- 라이센스 종류
+  - MICROSOFT SOFTWARE LICENSE
+  - MIT License
+
+- 라이센스 위치
+  - ".\packages\Microsoft.Direct3D.D3D12.<버전명>\LICENSE.txt"
+  - ".\packages\Microsoft.Direct3D.D3D12.<버전명>\LICENSE-CODE.txt"
 
 <br>
 
@@ -374,18 +384,18 @@
   - Direct3D 12 유틸리티 라이브러리 사용
 
 - 사용 방식
-  - 내부 직접 포함
-  - 포함 경로 : "External\DirectXTK12"
+  - NuGet 패키지 관리 (directxtk12_desktop_win10)
 
-- 원본 리포지토리
-  - microsoft/DirectXTK12  
-    https://github.com/microsoft/DirectXTK12
+- 복원 위치
+  - "SteelBallet\packages\directxtk12_desktop_win<버전명>"
 
 - 라이센스 종류
   - MIT License
 
-- 라이센스 경로
-  - "External\DirectXTK12\LICENSE"
+- 라이센스 위치
+  - ".\packages\directxtk12_desktop_win10.<버전명>\docs\README.md" 내부 간접 링크
+  - "https://github.com/microsoft/DirectXTK12/blob/main/LICENSE"
+
 
 <br>
 
@@ -394,22 +404,20 @@
   - HLSL 쉐이더 컴파일
 
 - 사용 방식
-  - 내부 직접 포함
-  - 포함 경로 : "External\DXC", "Bin"
-
-- 원본 리포지토리
-  - microsoft/DirectXShaderCompiler  
-    https://github.com/microsoft/DirectXShaderCompiler
+  - NuGet 패키지 관리 (Microsoft.Direct3D.DXC)
+  
+- 복원 위치
+  - "SteelBallet\packages\Microsoft.Direct3D.DXC.<버전명>"
 
 - 라이센스 종류
-  - University of Illinois/NCSA Open Source License
   - MIT License
+  - LLVM Release License
   - MICROSOFT SOFTWARE LICENSE
 
-- 라이센스 경로
-  - "External\DXC\LICENSE-LLVM.txt"
-  - "External\DXC\LICENSE-MIT.txt"
-  - "External\DXC\LICENSE-MS.txt"
+- 라이센스 위치
+  - ".\packages\Microsoft.Direct3D.DXC.<버전명>\LICENCE-MIT.txt"
+  - ".\packages\Microsoft.Direct3D.DXC.<버전명>\LICENSE-LLVM.txt"
+  - ".\packages\Microsoft.Direct3D.DXC.<버전명>\LICENSE-MS.txt"
 
 <br>
 
@@ -428,7 +436,7 @@
 - 라이센스 종류
   - MIT License
 
-- 라이센스 경로
+- 라이센스 위치
   - "External\imgui\LICENSE.txt"
 
 <br>
