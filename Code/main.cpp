@@ -1,15 +1,13 @@
 #include <windows.h>
 #include "SteelBalletApp.h"
 
-//NOTE : NuGet 설치 확인용
-#include "d3d12.h"
-#include <wrl/client.h>
+//NOTE : 수학 라이브러리 빌드 확인용 임시 코드
+#include <DirectXMath.h>
 
-//NOTE :	링크 대상 라이브러리들을 명시함
-//			이들은 기본 포함 라이브러리 디렉토리에 위치함
-#pragma comment(lib, "d3dcompiler.lib")
-#pragma comment(lib, "D3D12.lib")
+//NOTE : 링크 대상 라이브러리들을 명시함
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "D3D12.lib")
+#pragma comment(lib, "dxcompiler.lib")
 
 //NOTE : NuGet으로 설치한 DirectX12 Agility SDK 버전을 명시함
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 619;  }
@@ -21,11 +19,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(pCmdLine);
 
-	//NOTE : NuGet 설치 확인용
-	using Microsoft::WRL::ComPtr;
-	ComPtr<ID3D12Device> device;
-
 	SteelBalletApp appInstance;
+
+	//NOTE : 수학 라이브러리 빌드 확인용 임시 코드	
+	DirectX::XMVECTOR vec = { 1, 2, 3, 4 };
+	DirectX::XMFLOAT4 vecSave = { 1, 2, 3, 4 };
 
 	if (appInstance.Create(hInstance, nCmdShow) == false)
 	{

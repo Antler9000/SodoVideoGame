@@ -19,12 +19,6 @@
     <Filter Include="External">
       <UniqueIdentifier>{535d5251-68ea-42bb-a79d-58b1290f3716}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Code\Header">
-      <UniqueIdentifier>{25b5a41b-3129-4886-8d7f-bbae0bf0c663}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Code\Source">
-      <UniqueIdentifier>{c8998182-6060-436d-ad9a-b5123500c11b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="External\imgui">
       <UniqueIdentifier>{5bf34c99-8e87-497a-8f45-592e3ab7c1ec}</UniqueIdentifier>
     </Filter>
@@ -39,15 +33,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Code\Header\BaseApp.h">
-      <Filter>Code\Header</Filter>
-    </ClInclude>
-    <ClInclude Include="Code\Header\SteelBalletApp.h">
-      <Filter>Code\Header</Filter>
-    </ClInclude>
-    <ClInclude Include="Code\Header\Timer.h">
-      <Filter>Code\Header</Filter>
-    </ClInclude>
     <ClInclude Include="External\imgui\imconfig.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
@@ -72,14 +57,17 @@
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h">
       <Filter>External\imgui\backends</Filter>
     </ClInclude>
+    <ClInclude Include="Code\BaseApp.h">
+      <Filter>Code</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\SteelBalletApp.h">
+      <Filter>Code</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Timer.h">
+      <Filter>Code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Code\Source\main.cpp">
-      <Filter>Code\Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Code\Source\SteelBalletApp.cpp">
-      <Filter>Code\Source</Filter>
-    </ClCompile>
     <ClCompile Include="External\imgui\imgui.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
@@ -100,6 +88,12 @@
     </ClCompile>
     <ClCompile Include="External\imgui\backends\imgui_impl_win32.cpp">
       <Filter>External\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\main.cpp">
+      <Filter>Code</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\SteelBalletApp.cpp">
+      <Filter>Code</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

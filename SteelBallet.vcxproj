@@ -21,9 +21,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Code\Header\BaseApp.h" />
-    <ClInclude Include="Code\Header\SteelBalletApp.h" />
-    <ClInclude Include="Code\Header\Timer.h" />
+    <ClInclude Include="Code\BaseApp.h" />
+    <ClInclude Include="Code\SteelBalletApp.h" />
+    <ClInclude Include="Code\Timer.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="External\imgui\imconfig.h" />
@@ -34,8 +34,8 @@
     <ClInclude Include="External\imgui\imstb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Code\Source\main.cpp" />
-    <ClCompile Include="Code\Source\SteelBalletApp.cpp" />
+    <ClCompile Include="Code\main.cpp" />
+    <ClCompile Include="Code\SteelBalletApp.cpp" />
     <ClCompile Include="External\imgui\backends\imgui_impl_dx12.cpp" />
     <ClCompile Include="External\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="External\imgui\imgui.cpp" />
@@ -100,14 +100,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)Bin\</OutDir>
+    <OutDir>$(SolutionDir)OutDir\</OutDir>
     <TargetName>$(ProjectName)Debug64</TargetName>
-    <IntDir>$(SolutionDir)Inter\</IntDir>
+    <IntDir>$(SolutionDir)IntDir\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)Bin\</OutDir>
+    <OutDir>$(SolutionDir)OutDir\</OutDir>
     <TargetName>$(ProjectName)Release64</TargetName>
-    <IntDir>$(SolutionDir)Inter\</IntDir>
+    <IntDir>$(SolutionDir)IntDir\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -150,12 +150,13 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Code\Source;$(SolutionDir)\Code\Header;$(SolutionDir)\External\DirectXTK12\Inc;$(SolutionDir)\External\DirectXTK12\Audio;$(SolutionDir)\External\imgui;$(SolutionDir)\External\imgui\Backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Code;$(SolutionDir)\External\imgui;$(SolutionDir)\External\imgui\Backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ShowIncludes>true</ShowIncludes>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>/VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -170,12 +171,13 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Code\Source;$(SolutionDir)\Code\Header;$(SolutionDir)\External\DirectXTK12\Inc;$(SolutionDir)\External\DirectXTK12\Audio;$(SolutionDir)\External\imgui;$(SolutionDir)\External\imgui\Backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Code;$(SolutionDir)\External\imgui;$(SolutionDir)\External\imgui\Backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ShowIncludes>true</ShowIncludes>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>/VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
