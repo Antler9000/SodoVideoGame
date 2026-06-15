@@ -2,37 +2,37 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Code">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Texture">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Shader">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Model">
-      <UniqueIdentifier>{6e957d62-9b12-431c-aeb2-3f8f2a7fa65a}</UniqueIdentifier>
+      <UniqueIdentifier>{c86bfc31-e43d-4dc7-98c0-d6325e566f7b}</UniqueIdentifier>
     </Filter>
     <Filter Include="External">
-      <UniqueIdentifier>{535d5251-68ea-42bb-a79d-58b1290f3716}</UniqueIdentifier>
+      <UniqueIdentifier>{3466d626-d69d-4f3e-b530-5333142351ef}</UniqueIdentifier>
     </Filter>
     <Filter Include="External\imgui">
-      <UniqueIdentifier>{5bf34c99-8e87-497a-8f45-592e3ab7c1ec}</UniqueIdentifier>
+      <UniqueIdentifier>{387a745c-5f73-489c-abdb-16b99c123d76}</UniqueIdentifier>
     </Filter>
     <Filter Include="External\imgui\backends">
-      <UniqueIdentifier>{fc7a0f76-98be-40ea-8487-c73296fb857a}</UniqueIdentifier>
+      <UniqueIdentifier>{4aaacdae-9477-44f9-b051-38413a2a267f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Bin">
-      <UniqueIdentifier>{94fb44f3-afa9-4770-83b3-e1b534401667}</UniqueIdentifier>
+    <Filter Include="Model">
+      <UniqueIdentifier>{70221f91-33cc-4f01-af92-a30636e2f082}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Inter">
-      <UniqueIdentifier>{4fc79756-c924-493f-ad16-0d0a3f7fe695}</UniqueIdentifier>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{45413b6b-9fad-4568-af54-541dc492864a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Texture">
+      <UniqueIdentifier>{47c8c5eb-a5e8-46ed-bb4d-1b3ea26d457f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Code\BaseApp.h">
+      <Filter>Code</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\SodoApp.h">
+      <Filter>Code</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Timer.h">
+      <Filter>Code</Filter>
+    </ClInclude>
     <ClInclude Include="External\imgui\imconfig.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
@@ -57,17 +57,14 @@
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h">
       <Filter>External\imgui\backends</Filter>
     </ClInclude>
-    <ClInclude Include="Code\BaseApp.h">
-      <Filter>Code</Filter>
-    </ClInclude>
-    <ClInclude Include="Code\SteelBalletApp.h">
-      <Filter>Code</Filter>
-    </ClInclude>
-    <ClInclude Include="Code\Timer.h">
-      <Filter>Code</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Code\main.cpp">
+      <Filter>Code</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\SodoApp.cpp">
+      <Filter>Code</Filter>
+    </ClCompile>
     <ClCompile Include="External\imgui\imgui.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
@@ -89,14 +86,5 @@
     <ClCompile Include="External\imgui\backends\imgui_impl_win32.cpp">
       <Filter>External\imgui\backends</Filter>
     </ClCompile>
-    <ClCompile Include="Code\main.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="Code\SteelBalletApp.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
 </Project>

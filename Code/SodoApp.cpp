@@ -1,10 +1,10 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <wchar.h>
-#include "SteelBalletApp.h"
+#include "SodoApp.h"
 
 //NOTE : SetWindowTextW를 너무 자주 호출하면 시스템 부하로 인해 윈도우 전체가 먹통이 되니 반복에 텀을 주자
-void SteelBalletApp::PrintCaption()
+void SodoApp::PrintCaption()
 {
 	if (m_timer.GetNotCaptionedMilliSeconds() > 100.0f)
 	{
@@ -30,7 +30,7 @@ void SteelBalletApp::PrintCaption()
 //TODO :	각 메시지 처리를 함수로 만들어서 가독성을 높이자
 //NOTE :	WindowProc이 수행 중에는 해당 스레드의 메시지 큐에 쌓인 다른 메시지들을 처리하지 못하므로,
 //			되도록 이 안에서는 짧은 로직만 수행하도록 하고, 긴 대기가 필요한 로직은 별도 스레드로 처리하자
-LRESULT SteelBalletApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT SodoApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{

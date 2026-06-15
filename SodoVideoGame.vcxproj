@@ -22,7 +22,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Code\BaseApp.h" />
-    <ClInclude Include="Code\SteelBalletApp.h" />
+    <ClInclude Include="Code\SodoApp.h" />
     <ClInclude Include="Code\Timer.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h" />
@@ -35,7 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Code\main.cpp" />
-    <ClCompile Include="Code\SteelBalletApp.cpp" />
+    <ClCompile Include="Code\SodoApp.cpp" />
     <ClCompile Include="External\imgui\backends\imgui_impl_dx12.cpp" />
     <ClCompile Include="External\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="External\imgui\imgui.cpp" />
@@ -43,9 +43,6 @@
     <ClCompile Include="External\imgui\imgui_draw.cpp" />
     <ClCompile Include="External\imgui\imgui_tables.cpp" />
     <ClCompile Include="External\imgui\imgui_widgets.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
