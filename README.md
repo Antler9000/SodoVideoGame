@@ -157,32 +157,20 @@ D3D12의 기본적인 사용 기법을 이용하여 게임을 제작해보고자
 - `Code` (=`추가 포함 디렉토리`)  
   : 헤더 파일과 소스 파일이 위치합니다.
 
-<br>
-
 - `External`  
   : 리포지토리 내부에 직접 포함된 외부 항목이 위치합니다.
-
-<br>
 
 - `IntDir` ( =`중간 디렉토리`)  
   : 컴파일 결과물이 위치합니다.
 
-<br>
-
 - `Model`  
   : 오브젝트, 애니메이션 파일들이 위치합니다.
-
-<br>
 
 - `OutDir` (=`출력 디렉토리`, `작업 디렉토리`)  
   : 링크 결과물과, 런타임들이 위치합니다.
 
-<br>
-
 - `Shader`  
   : HLSL 셰이더 파일들이 위치합니다.
-
-<br>
 
 - `Texture`  
   : DDS 텍스처 파일들이 위치합니다.
@@ -195,25 +183,43 @@ D3D12의 기본적인 사용 기법을 이용하여 게임을 제작해보고자
 ### 5.2. 빌드 구성
 일단 별도의 빌드 시스템 없이 Visual Studio에서 직접 빌드를 관리하고 있습니다.
 
-임시 코드를 `main.cpp`에 삽입하여 확인한 결과, 본 리포지토리 환경에서 빌드와 실행에 사용되는 DirectX 관련 파일들의 경로는 다음과 같습니다.
-
-각 경로는 관리 주체와 목적이 다릅니다.
-| 경로 | 관리 주체 | 목적 |
-|---|---|---|
-| `C:\Windows\System32` | Windows | 응용 프로그램 구동에 필요한 런타임 보유 |
-| `C:\Program Files (x86)\Windows Kits` | Visual Studio Installer | 개발 빌드에 필요한 헤더, 라이브러리 보유 | 
-| `SodoVideoGame` 리포지토리 내부 | NuGet | 최신 헤더, 라이브러리, 런타임 복원 |
+일반적으로 Visual Studio에서 응용 프로그램의 빌드와 실행은 다음과 같이 이뤄집니다[3].
+| 단계 | 직접 입력 | 직접 입력 대상 | 간접 입력 | 간접 입력 대상 명시 | 간접 입력 대상 경로 명시 | 출력 | 출력 경로 |
+|---|---|---|---|---|---|---|---|
+| 전처리 + 컴파일 | `.cpp` | 프로젝트에 포함된 각 `.cpp` 파일들 | `.h`, `.inl` | `#include <xxx.h>`, `#include "xxx.h"`| (`프로젝트 속성` > `C/C++` > `일반` > `추가 포함 디렉토리` > `편집`) | `.obj` | `중간 디렉토리` |
+| 링크 | `.obj` | 컴파일된 `.obj` 파일들 | `.lib` | `#pragma comment(lib, "xxx.lib")` <br> or <br> (`프로젝트 속성` > `링커` > `입력` > `추가 종속성` > `편집`) | (`프로젝트 속성` > `링커` > `일반` > `추가 라이브러리 디렉토리` > `편집`) | `.exe` |  `출력 디렉토리` |
+| 실행 | `.exe` | 링크된 `.exe` |  `.dll` | 링크 시점에 임포트 라이브러리를 링크 <br> (로드-타임 동적 링킹) <br> or <br> 실행 중 `LoadLibraryA(..)` 함수 사용 <br> (런-타임 동적 링킹) | (`프로젝트 속성` > `디버깅` > `환경` > `편집`) | 프로세스 | 해당 없음 |
 
 <br>
 
-- 컴파일 입력 (헤더 파일)
+D3D12에 관련된 헤더, 라이브러리, 런타임을 가장 간단히 세팅하기 위해선 다음 대상들을 이용합니다[4][5].
+| 대상 | 관리 주체 | 내용물 | 목적 | 경로 | 세팅 방법 |
+|---|---|---|---|---|---|
+| Windows SDK | Visual Studio Installer | `.h`, `.inl`, `.lib` | 윈도우 앱 빌드에 필요한 헤더, 라이브러리 사용 |`C:\Program Files (x86)\Windows Kits` | 경로는 기본 설정되어 있으니, 무엇을 사용할지만 다음처럼 명시하면 됨 <br> `#include <d3d12.h>` <br> `#include <dxgi1_6.h>` <br> `#pragma comment(lib, "dxgi.lib")` <br> `#pragma comment(lib, "D3D12.lib")` <br> ... |
+| DirectX Header | Microsoft Github Repository | `.h` | `d3dx12*.h` 헬퍼 구조체, 헬퍼 함수 사용 | https://github.com/microsoft/DirectX-Headers | 수동으로 다운로드 받아 프로젝트 내에 포함 |
+| D3D12 Runtime | Windows | `.dll` | 응용 프로그램 구동에 필요한 런타임 사용 | `C:\Windows\System32` | 경로는 기본 설정되어 있고, 임포트 라이브러리인 `D3D12.lib`을 통해 로드-타임 동적 링킹이 일어나므로, 별도의 런-타임 링킹 또한 필요 없음 |
+
+<br>
+
+추가로, 배포된 리포지토리 내부에서도 최신의 D3D12 관련 기능을 사용할 수 있도록 NuGet을 이용하였습니다.
+| 대상 | 목적 | 파일 |
+|---|---|---|
+| DirectX 12 Agility SDK | 최신 D3D12 기능 사용 | `.h`, `.dll` |
+| DirectXTK12 | 최신 DirectX12 툴 사용 | `.h`, `.inl`, `.dll` |
+| DirectX Shader Compiler (DXC) | HLSL 셰이더 파일 컴파일 | `.h`, `.lib`, `.dll` |
+
+<br>
+
+임시 코드를 `main.cpp`에 삽입하여 확인한 결과, 본 리포지토리 환경에서 빌드에 사용되는 DirectX 관련 파일들의 경로는 다음과 같습니다.
+
+- 전처리 및 컴파일 입력
   - 확인 방법
     1. `프로젝트 속성` > `C/C++` > `포함 표시` > `예(/showIncludes)` 설정
     2. 상단의 `빌드` > `솔루션 빌드` > 하단의 출력창의 `출력 보기 선택`을 `빌드`로 선택
 
   - 확인된 목록
     - 변화가 적은 dxgi와 DirectXMath는 NuGet의 관리 대상이 아니기에  
-      이들에 관련된 헤더 파일들은 Visual Studio Installer가 관리하는 Window Kits에 위치합니다.  
+      이들에 관련된 헤더 파일들은 Visual Studio Installer가 관리하는 Windows Kits에 위치합니다.  
       - `C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\DirectXMath.h`
 
       - `C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\DirectXMathConvert.inl`
@@ -290,19 +296,19 @@ D3D12의 기본적인 사용 기법을 이용하여 게임을 제작해보고자
 
 <br>
 
-- 링크 입력 (라이브러리)
+- 링크 입력
   - 확인 방법
     1. `프로젝트 속성` > `링커` > `명령줄` > `추가 옵션` > `/VERBOSE:LIB` 입력
     2. 상단의 `빌드` > `솔루션 빌드` > 하단의 출력창의 `출력 보기 선택`을 `빌드`로 선택
 
   - 확인된 목록
     - 변화가 적은 하위 로직을 담당하는 dxgi.lib와 gdi32.lib은 Windows Kits에 위치합니다.  
-      다만 DirectXMath는 헤더파일(.h or .inl)으로만 구현되므로 라이브러리가 존재하지 않습니다.
+      다만 DirectXMath는 헤더파일(.h or .inl)으로만 구현되므로 라이브러리 파일이 존재하지 않습니다.
       - `C:\Program Files (x86)\Windows Kits\10\lib\10.0.26100.0\um\x64\gdi32.lib`
     
       - `C:\Program Files (x86)\Windows Kits\10\lib\10.0.26100.0\um\x64\dxgi.lib`
 
-    - D3D12.lib은 dll로 가기 위한 임포트 라이브러리이기에 굳이 최신 버전으로 관리될 필요가 없어  
+    - D3D12.lib은 dll을 로드하기 위한 임포트 라이브러리이기에 변화가 적어  
       Visual Studio Installer가 관리하는 Windows Kits 아래에 위치합니다.  
       - `C:\Program Files (x86)\Windows Kits\10\lib\10.0.26100.0\um\x64\D3D12.lib`
 
@@ -317,7 +323,7 @@ D3D12의 기본적인 사용 기법을 이용하여 게임을 제작해보고자
 
 <br>
 
-- 실행 의존 (런타임)
+- 실행 의존
   - 확인 방법
     1. 상단의 `디버그` > `디버깅 시작`
     2. 상단의 `디버그` > `창` > `모듈`
@@ -356,8 +362,22 @@ D3D12의 기본적인 사용 기법을 이용하여 게임을 제작해보고자
 
 
 
+### 5.3. 시스템 구성
+- 프로젝트에서 D3D12 기능을 사용하는 경우 주로 다음과 같은 경로를 따라가게 됩니다[5].
+1. `d3d12.h`를 통해 D3D12 기능을 호출
+2. `D3D12.lib`을 통해 임포트된...TODO
+
+- 이때 `D3D12Core.dll`은 다음과 같은 시스템 요소들과 요청 및 결과를 주고 받으며 작업을 수행합니다[6]. 
+  - 유저모드 : D3D12 런타임, DXGI, WDDM UserMode Driver, gdi32.dll
+  - 커널모드 : dxgkrnl.sys, dxgmms2.sys, WDDM KernelMode Driver
+
+<br>
+
+
+
+
 ### 5.3. 입력 방식
-일반적인 윈도우 메시지 처리 방식을 사용하고 있습니다.
+일반적인 윈도우 메시지 처리 방식을 사용하고 있습니다[7].
 
 <br>
 
@@ -491,12 +511,24 @@ D3D12의 기본적인 사용 기법을 이용하여 게임을 제작해보고자
 
 
 
-
+[^abc] awdadw
 <!----------------------------------------------------------------------------------------------------------------------------------------------->
 ## 8. 참고 자료
-[1] "DirectX 12를 이용한 3D 게임 프로그래밍 입문" (Frank D. Luna 지음 / 류광 옮김 / 한빛미디어 출판 / 2017년 발행)
+[^abc] : ["DirectX 12를 이용한 3D 게임 프로그래밍 입문" (Frank D. Luna 지음 / 류광 옮김 / 한빛미디어 출판 / 2017년 발행)]
 
 [2] "Introduction To 3D Game Programming With DirectX 12 Second Edition" (Frank D. Luna 지음 / Mercury Learning And Information 출판 / 2025년 발행)
 
-[3] "Get Started with Win32 and C++" (Microsoft Learn / 2026년 6월 재방문)
-`https://learn.microsoft.com/en-us/windows/win32/learnwin32/learn-to-program-for-windows`
+[3] "Dynamic-Link Libraries (Dynamic-Link Libraries)" (Microsoft Learn / 2026년 6월 재방문)  
+https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-libraries
+
+[4] "Helper structures and functions for Direct3D 12" (Microsoft Learn / 2026년 6월 재방문)  
+https://learn.microsoft.com/en-us/windows/win32/direct3d12/helper-structures-and-functions-for-d3d12
+
+[5] "Direct3D 12 programming environment setup" (Microsoft Learn / 2026년 6월 재방문)  
+https://learn.microsoft.com/en-us/windows/win32/direct3d12/directx-12-programming-environment-set-up?utm_source=chatgpt.com
+
+[6] "WDDM architecture" (Microsoft Learn / 2026년 6월 재방문)  
+https://learn.microsoft.com/en-us/windows-hardware/drivers/display/windows-vista-and-later-display-driver-model-architecture
+
+[7] "Get Started with Win32 and C++" (Microsoft Learn / 2026년 6월 재방문)  
+https://learn.microsoft.com/en-us/windows/win32/learnwin32/learn-to-program-for-windows
