@@ -90,7 +90,7 @@ public:
 			NULL,
 			NULL,
 			hInstance,
-			(LPVOID)this	//NOTE : WindowProc에서 이 객체에 접근할 수 있도록 하기 위한 단계 중 하나임
+			(LPVOID)this	//NOTE : WindowProcedure에서 이 객체에 접근할 수 있도록 하기 위한 단계 중 하나임
 		);
 
 		if (m_hWnd == NULL)

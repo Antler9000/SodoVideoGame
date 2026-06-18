@@ -90,7 +90,7 @@ D3D12의 기본적인 사용 기법을 이용하여 게임을 제작해보고자
 
 다양한 기법들을 직교적으로 조합해가며 가능성을 탐색하되, 하나의 핵심 가치를 기준으로 이들을 선별하여 일관된 방향성을 구축하고자 합니다.
 
-본 프로젝트에서 추구하는 핵심 가치는 '상식이나 승리에 얽매이지 않은, 더 나은 제3의 선택'입니다.
+본 프로젝트에서 추구하는 핵심 가치는 '수단이 아닌 목적으로서의 회피'입니다.
 
 <br>
 
@@ -192,16 +192,16 @@ D3D12의 기본적인 사용 기법을 이용하여 게임을 제작해보고자
 
 <br>
 
-D3D12에 관련된 헤더, 라이브러리, 런타임을 가장 간단히 세팅하기 위해선 다음 대상들을 이용합니다[4][5].
+D3D12에 관련된 간접 입력 대상들을 가장 간단히 세팅한다면 이용하는 대상은 주로 다음과 같습니다[4][5].
 | 대상 | 관리 주체 | 내용물 | 목적 | 경로 | 세팅 방법 |
 |---|---|---|---|---|---|
-| Windows SDK | Visual Studio Installer | `.h`, `.inl`, `.lib` | 윈도우 앱 빌드에 필요한 헤더, 라이브러리 사용 |`C:\Program Files (x86)\Windows Kits` | 경로는 기본 설정되어 있으니, 무엇을 사용할지만 다음처럼 명시하면 됨 <br> `#include <d3d12.h>` <br> `#include <dxgi1_6.h>` <br> `#pragma comment(lib, "dxgi.lib")` <br> `#pragma comment(lib, "D3D12.lib")` <br> ... |
-| DirectX Header | Microsoft Github Repository | `.h` | `d3dx12*.h` 헬퍼 구조체, 헬퍼 함수 사용 | https://github.com/microsoft/DirectX-Headers | 수동으로 다운로드 받아 프로젝트 내에 포함 |
-| D3D12 Runtime | Windows | `.dll` | 응용 프로그램 구동에 필요한 런타임 사용 | `C:\Windows\System32` | 경로는 기본 설정되어 있고, 임포트 라이브러리인 `D3D12.lib`을 통해 로드-타임 동적 링킹이 일어나므로, 별도의 런-타임 링킹 또한 필요 없음 |
+| Windows SDK | Visual Studio Installer | `.h`, `.inl`, `.lib` | 윈도우 앱 빌드에 필요한 헤더, 라이브러리 사용 |`C:\Program Files (x86)\Windows Kits` | 경로는 기본 설정되어 있음, <br> 무엇을 사용할지만 다음처럼 명시하면 됨 <br> `#include <d3d12.h>` <br> `#include <dxgi1_6.h>` <br> `#pragma comment(lib, "dxgi.lib")` <br> `#pragma comment(lib, "D3D12.lib")` <br> ... |
+| DirectX Header | Microsoft Github Repository | `.h` | `d3dx12*.h` 헬퍼 구조체, 헬퍼 함수 사용 | https://github.com/microsoft/DirectX-Headers | 수동으로 다운로드 받아 프로젝트에 포함 |
+| D3D12 Runtime | Windows | `.dll` | 응용 프로그램 구동에 필요한 런타임 사용 | `C:\Windows\System32` | 경로는 기본 설정되어 있음, <br> 임포트 라이브러리인 `D3D12.lib`을 통해 로드-타임 동적 링킹이 일어나므로 별도의 런-타임 링킹 또한 필요 없음 |
 
 <br>
 
-추가로, 배포된 리포지토리 내부에서도 최신의 D3D12 관련 기능을 사용할 수 있도록 NuGet을 이용하였습니다.
+이에 추가로, 배포된 리포지토리 내부에서 최신의 D3D12 관련 기능을 복원하여 사용할 수 있도록 NuGet을 이용하였습니다.
 | 대상 | 목적 | 파일 |
 |---|---|---|
 | DirectX 12 Agility SDK | 최신 D3D12 기능 사용 | `.h`, `.dll` |
@@ -511,10 +511,10 @@ D3D12에 관련된 헤더, 라이브러리, 런타임을 가장 간단히 세팅
 
 
 
-[^abc] awdadw
+
 <!----------------------------------------------------------------------------------------------------------------------------------------------->
 ## 8. 참고 자료
-[^abc] : ["DirectX 12를 이용한 3D 게임 프로그래밍 입문" (Frank D. Luna 지음 / 류광 옮김 / 한빛미디어 출판 / 2017년 발행)]
+[1] : ["DirectX 12를 이용한 3D 게임 프로그래밍 입문" (Frank D. Luna 지음 / 류광 옮김 / 한빛미디어 출판 / 2017년 발행)]
 
 [2] "Introduction To 3D Game Programming With DirectX 12 Second Edition" (Frank D. Luna 지음 / Mercury Learning And Information 출판 / 2025년 발행)
 

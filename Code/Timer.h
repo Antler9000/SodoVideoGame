@@ -1,22 +1,21 @@
 #pragma once
 #include <chrono>
-using namespace std;
-using namespace std::chrono;
 
 class Timer
 {
+
 public:
 
-	Timer()
+	Timer() :
+		m_startTime(m_clock.now()),
+		m_captionedTime(m_startTime),
+		m_previousTime(m_startTime),
+		m_currentTime(m_startTime),
+		m_timeFromStart(m_currentTime - m_startTime),
+		m_timeFromLastCaption(m_currentTime - m_captionedTime),
+		m_timeFromLastFrame(m_currentTime - m_previousTime)
 	{
-		m_startTime = m_clock.now();
-		m_captionedTime = m_startTime;
-		m_previousTime = m_startTime;
-		m_currentTime = m_startTime;
 
-		m_elapsedTime = m_currentTime - m_startTime;
-		m_notCaptionedTime = m_currentTime - m_captionedTime;
-		m_frameTime = m_currentTime - m_previousTime;
 	}
 
 	~Timer()
@@ -34,45 +33,45 @@ public:
 	{
 		m_currentTime = m_clock.now();
 
-		m_elapsedTime = m_currentTime - m_startTime;
-		m_notCaptionedTime = m_currentTime - m_captionedTime;
-		m_frameTime = m_currentTime - m_previousTime;
+		m_timeFromStart = m_currentTime - m_startTime;
+		m_timeFromLastCaption = m_currentTime - m_captionedTime;
+		m_timeFromLastFrame = m_currentTime - m_previousTime;
 
 		m_previousTime = m_currentTime;
 	}
 
-	void Captioned()
+	void MarkLastCaptionTime()
 	{
 		m_captionedTime = m_currentTime;
 
-		m_notCaptionedTime = m_currentTime - m_captionedTime;
+		m_timeFromLastCaption = m_currentTime - m_captionedTime;
 	}
 
 	double GetEleapsedMilliSeconds()
 	{
-		return m_elapsedTime.count();
+		return m_timeFromStart.count();
 	}
 
 	double GetNotCaptionedMilliSeconds()
 	{
-		return m_notCaptionedTime.count();
+		return m_timeFromLastCaption.count();
 	}
 
 	double GetFrameMilliSeconds()
 	{
-		return m_frameTime.count();
+		return m_timeFromLastFrame.count();
 	}
 
 private:
 
-	steady_clock m_clock;
+	std::chrono::steady_clock m_clock;
 
-	time_point<steady_clock> m_startTime;
-	time_point<steady_clock> m_captionedTime;
-	time_point<steady_clock> m_previousTime;
-	time_point<steady_clock> m_currentTime;
+	std::chrono::time_point<std::chrono::steady_clock> m_startTime;
+	std::chrono::time_point<std::chrono::steady_clock> m_captionedTime;
+	std::chrono::time_point<std::chrono::steady_clock> m_previousTime;
+	std::chrono::time_point<std::chrono::steady_clock> m_currentTime;
 
-	duration<double, milli> m_elapsedTime;
-	duration<double, milli> m_notCaptionedTime;
-	duration<double, milli> m_frameTime;
+	std::chrono::duration<double, std::milli> m_timeFromStart;
+	std::chrono::duration<double, std::milli> m_timeFromLastCaption;
+	std::chrono::duration<double, std::milli> m_timeFromLastFrame;
 };
