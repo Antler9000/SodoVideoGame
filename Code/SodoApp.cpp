@@ -1,45 +1,86 @@
 #include <windows.h>
 #include <windowsx.h>
+#include <wchar.h>
+#include <d3d12sdklayers.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
 #include <string>
-#include <wchar.h>
+#include <vector>
 #include "SodoApp.h"
 
 using Microsoft::WRL::ComPtr;
 using std::wstring;
 
-void SodoApp::PrintAdapterInfo() const
+void SodoApp::CreateDevice()
 {
-	ComPtr<IDXGIAdapter> dxgiAdapter = nullptr;
+	UINT dxgiFactoryFlags = 0;
+
+#ifdef _DEBUG
+	dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+
+	ComPtr<ID3D12Debug1> dxgiDebug;
+	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(dxgiDebug.GetAddressOf())));
+	dxgiDebug->EnableDebugLayer();
+	dxgiDebug->SetEnableGPUBasedValidation(true);
+#endif
+
+	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(m_dxgiFactory.ReleaseAndGetAddressOf())));
+
+	ComPtr<IDXGIAdapter3> foundDxgiAdapter = nullptr;
 
 	int i = 0;
-	while(m_dxgiFactory->EnumAdapters(i, dxgiAdapter.ReleaseAndGetAddressOf()) != DXGI_ERROR_NOT_FOUND)
+	while (m_dxgiFactory->EnumAdapterByGpuPreference(
+		i,
+		DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
+		IID_PPV_ARGS(foundDxgiAdapter.ReleaseAndGetAddressOf())) != DXGI_ERROR_NOT_FOUND)
 	{
-		DXGI_ADAPTER_DESC dxgiAdapterDesc;
-		dxgiAdapter->GetDesc(&dxgiAdapterDesc);
+		HRESULT result = D3D12CreateDevice(
+			foundDxgiAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(m_d3d12Device.ReleaseAndGetAddressOf())
+		);
+		
+		if (SUCCEEDED(result))
+		{
+			m_dxgiAdapter = foundDxgiAdapter;
 
-		wstring adapterText = L"¾î´ðÅÍ : ";
-		adapterText += dxgiAdapterDesc.Description;
-		adapterText += L"\n";
+			m_deviceSupportRayTracing = SUCCEEDED(
+				m_d3d12Device->QueryInterface(IID_PPV_ARGS(m_d3d12Device5.ReleaseAndGetAddressOf()))
+			);
 
-		OutputDebugStringW(adapterText.c_str());
+			if (m_deviceSupportRayTracing == true)
+			{
+				//TODO : m_featureSupportRayTracing¸¦ ¿©±â¼­ È®ÀÎÇÏÀÚ
+			}
 
-		PrintOutputInfo(dxgiAdapter.Get());
+			break;
+		}
 
 		i++;
 	}
 }
 
+void SodoApp::PrintAdapterInfo() const
+{
+	DXGI_ADAPTER_DESC dxgiAdapterDesc;
+	m_dxgiAdapter->GetDesc(&dxgiAdapterDesc);
+
+	wstring adapterText = L"¾î´ðÅÍ : ";
+	adapterText += dxgiAdapterDesc.Description;
+	adapterText += L"\n";
+
+	OutputDebugStringW(adapterText.c_str());
+
+	PrintOutputInfo(m_dxgiAdapter.Get());
+}
+
 void SodoApp::PrintOutputInfo(IDXGIAdapter* dxgiAdapter) const
 {
-	ComPtr<IDXGIOutput> dxgiOutput = nullptr;
+	ComPtr<IDXGIOutput> foundDxgiOutput = nullptr;
 
 	int i = 0;
-	while (dxgiAdapter->EnumOutputs(i, dxgiOutput.ReleaseAndGetAddressOf()) != DXGI_ERROR_NOT_FOUND)
+	while (dxgiAdapter->EnumOutputs(i, foundDxgiOutput.ReleaseAndGetAddressOf()) != DXGI_ERROR_NOT_FOUND)
 	{
 		DXGI_OUTPUT_DESC dxgiOutputDesc;
-		dxgiOutput->GetDesc(&dxgiOutputDesc);
+		foundDxgiOutput->GetDesc(&dxgiOutputDesc);
 
 		wstring outputText = L"\t¾Æ¿ôÇ² : ";
 		outputText += dxgiOutputDesc.DeviceName;
@@ -47,7 +88,7 @@ void SodoApp::PrintOutputInfo(IDXGIAdapter* dxgiAdapter) const
 
 		OutputDebugStringW(outputText.c_str());
 
-		PrintDisplayInfo(dxgiOutput.Get());
+		PrintDisplayInfo(foundDxgiOutput.Get());
 
 		i++;
 	}
@@ -59,10 +100,10 @@ void SodoApp::PrintDisplayInfo(IDXGIOutput* dxgiOutput) const
 	UINT modeCount = 0;
 	dxgiOutput->GetDisplayModeList(m_backBufferFormat, 0, &modeCount, nullptr);
 
-	std::vector<DXGI_MODE_DESC> modeList(modeCount);
-	dxgiOutput->GetDisplayModeList(m_backBufferFormat, 0, &modeCount, &modeList[0]);
+	std::vector<DXGI_MODE_DESC> foundModeList(modeCount);
+	dxgiOutput->GetDisplayModeList(m_backBufferFormat, 0, &modeCount, &foundModeList[0]);
 
-	for (const DXGI_MODE_DESC& mode : modeList)
+	for (const DXGI_MODE_DESC& mode : foundModeList)
 	{
 		UINT refreshRateNumerator = mode.RefreshRate.Numerator;
 		UINT refreshRateDenominator = mode.RefreshRate.Denominator;

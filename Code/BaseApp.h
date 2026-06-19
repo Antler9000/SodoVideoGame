@@ -53,7 +53,7 @@ public:
 	BaseApp& operator = (BaseApp&& sourceApp) = delete;
 
 	//RETURN : 창 생성 실패시 false를 반환함
-	bool Create(HINSTANCE hInstance, int show)
+	bool CreateAppWindow(HINSTANCE hInstance, int show)
 	{
 		if (m_isCreated == true)
 		{

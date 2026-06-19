@@ -7,7 +7,7 @@
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxcompiler.lib")
 
-//NOTE :	DirectX12 Agility SDK의 런타임은 사용할 버전을 정의해야 한다
+//NOTE :	DirectX12 Agility SDK의 런타임은 사용할 버전을 정의해야 함
 //			모든 번역 단위를 통틀어서 한 번만 정의해야 하므로 이곳 main.cpp에 작성했음
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 619;  }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\";  }
@@ -20,7 +20,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	SodoApp appInstance;
 
-	if (appInstance.Create(hInstance, nCmdShow) == false)
+	if (appInstance.CreateAppWindow(hInstance, nCmdShow) == false)
 	{
 		return 0;
 	}

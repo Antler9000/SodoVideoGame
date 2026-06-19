@@ -1,9 +1,19 @@
 #pragma once
 #include <windows.h>
+#include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
+#include <stdexcept>
 #include "BaseApp.h"
 #include "Timer.h"
+
+inline void ThrowIfFailed(HRESULT hResult)
+{
+	if (FAILED(hResult))
+	{
+		throw std::runtime_error("HRESULT Failed");
+	}
+}
 
 class SodoApp : public BaseApp<SodoApp>
 {
@@ -14,7 +24,12 @@ public:
 
 	SodoApp() :
 		BaseApp(L"Sodo Video Game"),
+		m_deviceSupportRayTracing(false),
+		m_featureSupportRayTracing(false),
 		m_dxgiFactory(nullptr),
+		m_dxgiAdapter(nullptr),
+		m_d3d12Device(nullptr),
+		m_d3d12Device5(nullptr),
 		m_backBufferFormat(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB),
 		m_mousePosClient(0, 0),
 		m_clickedPosClient(0, 0),
@@ -32,9 +47,7 @@ public:
 	//RETURN : 초기화에 실패할 시 false를 반환함
 	bool InitApp()
 	{
-		//TODO : 어댑터 나열을 위해 작성한 바로 아래의 임시 factory 생성 코드를 점검하자
-		UINT dxgiFactoryFlags = 0;
-		CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&m_dxgiFactory));
+		CreateDevice();
 
 		PrintAdapterInfo();
 
@@ -64,6 +77,8 @@ public:
 
 private:
 
+	void CreateDevice();
+
 	void PrintAdapterInfo() const;
 
 	void PrintOutputInfo(IDXGIAdapter* dxgiAdapter) const;
@@ -81,7 +96,12 @@ private:
 
 private:
 
-	Microsoft::WRL::ComPtr<IDXGIFactory> m_dxgiFactory;
+	bool m_deviceSupportRayTracing;
+	bool m_featureSupportRayTracing;
+	Microsoft::WRL::ComPtr<IDXGIFactory6> m_dxgiFactory;		//NOTE : EnumAdapterByGpuPreference(..)를 위해 6 버전 기본 사용
+	Microsoft::WRL::ComPtr<IDXGIAdapter3> m_dxgiAdapter;		//NOTE : 자원의 메모리 상주성 관리를 위해 3 버전 기본 사용
+	Microsoft::WRL::ComPtr<ID3D12Device> m_d3d12Device;			//NOTE : 메인 그래픽 기능을 위해 0 버전 기본 사용
+	Microsoft::WRL::ComPtr<ID3D12Device5> m_d3d12Device5;		//NOTE : 레이 트레이싱 옵션 기능을 위해 5 버전 추가 사용
 	DXGI_FORMAT m_backBufferFormat;
 
 	POINT m_mousePosClient;
