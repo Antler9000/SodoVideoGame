@@ -1,9 +1,9 @@
 #pragma once
 #include <chrono>
+#include <ratio>
 
 class Timer
 {
-
 public:
 
 	Timer() :
@@ -47,7 +47,7 @@ public:
 		m_timeFromLastCaption = m_currentTime - m_captionedTime;
 	}
 
-	double GetEleapsedMilliSeconds()
+	double GetElapsedMilliSeconds()
 	{
 		return m_timeFromStart.count();
 	}
@@ -74,4 +74,4 @@ private:
 	std::chrono::duration<double, std::milli> m_timeFromStart;
 	std::chrono::duration<double, std::milli> m_timeFromLastCaption;
 	std::chrono::duration<double, std::milli> m_timeFromLastFrame;
-};
+}; 

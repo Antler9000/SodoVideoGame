@@ -20,12 +20,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	SodoApp appInstance;
 
-	if (appInstance.CreateAppWindow(hInstance, nCmdShow) == false)
-	{
-		return 0;
-	}
+	appInstance.CreateAppWindow(hInstance, nCmdShow);
 
-	appInstance.InitApp();
+	appInstance.InitializeApp();
 
 	return appInstance.RunMessageLoop();
 }

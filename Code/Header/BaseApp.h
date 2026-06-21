@@ -1,5 +1,6 @@
 #pragma once
 #include <windows.h>
+#include "Throw.h"
 
 //NOTE : WindowProc에서 생성할 pThis 객체의 클래스가 자식 클래스일 수 있도록 템플릿 타입 매개변수를 사용함
 template <class DerievedApp>
@@ -35,7 +36,7 @@ class BaseApp
 
 public:
 
-	BaseApp(const wchar_t* pAppName) : m_pAppName(pAppName), m_isCreated(false), m_hInstance(NULL), m_hWnd(NULL)
+	BaseApp(const wchar_t* pAppName) : m_pAppName(pAppName), m_hInstance(NULL), m_hWnd(NULL)
 	{
 
 	}
@@ -52,13 +53,11 @@ public:
 	BaseApp& operator = (const BaseApp& sourceApp) = delete;
 	BaseApp& operator = (BaseApp&& sourceApp) = delete;
 
-	//RETURN : 창 생성 실패시 false를 반환함
-	bool CreateAppWindow(HINSTANCE hInstance, int show)
+	void CreateAppWindow(HINSTANCE hInstance, int show)
 	{
-		if (m_isCreated == true)
-		{
-			return false;
-		}
+		ThrowIfFalse(m_bNotCreated);
+
+		m_bNotCreated = false;
 
 		m_hInstance = hInstance;
 
@@ -71,12 +70,7 @@ public:
 		wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 		wc.lpszClassName = m_pClassName;
 
-		if (RegisterClass(&wc) == false)
-		{
-			MessageBoxW(0, L"RegisterClass 실패함", L"에러", 0);
-
-			return false;
-		}
+		ThrowIfFalse(RegisterClass(&wc));
 
 		m_hWnd = CreateWindowEx(
 			0,
@@ -93,27 +87,19 @@ public:
 			(LPVOID)this	//NOTE : WindowProcedure에서 이 객체에 접근할 수 있도록 하기 위한 단계 중 하나임
 		);
 
-		if (m_hWnd == NULL)
-		{
-			MessageBoxW(0, L"CreateWindow 실패함", L"에러", 0);
-
-			return false;
-		}
-
-		m_isCreated = true;
+		ThrowIfNull(m_hWnd);
 
 		ShowWindow(m_hWnd, show);
 		UpdateWindow(m_hWnd);
-
-		return true;
 	}
 
 protected:
 	
-	const wchar_t*	m_pAppName;
+	//NOTE : 중복 정의 문제가 안 나도록 inline 처리함
+	inline static bool	m_bNotCreated = true;
 
-	bool			m_isCreated;
+	const wchar_t*		m_pAppName;
 	
-	HINSTANCE		m_hInstance;
-	HWND			m_hWnd;
+	HINSTANCE			m_hInstance;
+	HWND				m_hWnd;
 };

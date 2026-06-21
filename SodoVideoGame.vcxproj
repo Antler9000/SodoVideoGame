@@ -21,9 +21,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Code\BaseApp.h" />
-    <ClInclude Include="Code\SodoApp.h" />
-    <ClInclude Include="Code\Timer.h" />
+    <ClInclude Include="Code\Header\BaseApp.h" />
+    <ClInclude Include="Code\Header\SodoApp.h" />
+    <ClInclude Include="Code\Header\Throw.h" />
+    <ClInclude Include="Code\Header\Timer.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="External\imgui\imconfig.h" />
@@ -34,8 +35,10 @@
     <ClInclude Include="External\imgui\imstb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Code\main.cpp" />
-    <ClCompile Include="Code\SodoApp.cpp" />
+    <ClCompile Include="Code\Source\main.cpp" />
+    <ClCompile Include="Code\Source\SodoAppInitialize.cpp" />
+    <ClCompile Include="Code\Source\SodoAppInput.cpp" />
+    <ClCompile Include="Code\Source\SodoAppUpdate.cpp" />
     <ClCompile Include="External\imgui\backends\imgui_impl_dx12.cpp" />
     <ClCompile Include="External\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="External\imgui\imgui.cpp" />
@@ -147,7 +150,7 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Code;$(SolutionDir)\External\imgui;$(SolutionDir)\External\imgui\Backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Code\Header;$(SolutionDir)\External\imgui;$(SolutionDir)\External\imgui\Backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ShowIncludes>true</ShowIncludes>
     </ClCompile>
     <Link>
@@ -169,7 +172,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Code;$(SolutionDir)\External\imgui;$(SolutionDir)\External\imgui\Backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Code\Header;$(SolutionDir)\External\imgui;$(SolutionDir)\External\imgui\Backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ShowIncludes>true</ShowIncludes>
     </ClCompile>
     <Link>

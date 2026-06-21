@@ -22,17 +22,14 @@
     <Filter Include="Texture">
       <UniqueIdentifier>{47c8c5eb-a5e8-46ed-bb4d-1b3ea26d457f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Code\Header">
+      <UniqueIdentifier>{0ef0dd21-b0ad-44e4-a1b7-d88cf503816b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code\Source">
+      <UniqueIdentifier>{31c5ccac-c2c9-4dbd-8326-a3c88b601a47}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Code\BaseApp.h">
-      <Filter>Code</Filter>
-    </ClInclude>
-    <ClInclude Include="Code\SodoApp.h">
-      <Filter>Code</Filter>
-    </ClInclude>
-    <ClInclude Include="Code\Timer.h">
-      <Filter>Code</Filter>
-    </ClInclude>
     <ClInclude Include="External\imgui\imconfig.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
@@ -57,14 +54,20 @@
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h">
       <Filter>External\imgui\backends</Filter>
     </ClInclude>
+    <ClInclude Include="Code\Header\BaseApp.h">
+      <Filter>Code\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Header\SodoApp.h">
+      <Filter>Code\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Header\Throw.h">
+      <Filter>Code\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Header\Timer.h">
+      <Filter>Code\Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Code\main.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="Code\SodoApp.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
     <ClCompile Include="External\imgui\imgui.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
@@ -85,6 +88,18 @@
     </ClCompile>
     <ClCompile Include="External\imgui\backends\imgui_impl_win32.cpp">
       <Filter>External\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Source\main.cpp">
+      <Filter>Code\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Source\SodoAppInitialize.cpp">
+      <Filter>Code\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Source\SodoAppInput.cpp">
+      <Filter>Code\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Source\SodoAppUpdate.cpp">
+      <Filter>Code\Source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
