@@ -2,14 +2,16 @@
 #include <d3d12sdklayers.h>
 #include <d3d12.h>
 #include <d3dcommon.h>
+#include <dxgicommon.h>
 #include <dxgi1_6.h>
 #include <dxgi1_3.h>
+#include <dxgi1_2.h>
 #include <dxgi.h>
 #include <dxgitype.h>
 #include <wrl/client.h>
+#include <string>
 #include <cstdio>
 #include <cstdlib>
-#include <string>
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
@@ -28,6 +30,8 @@ void SodoApp::InitializeFactory()
 #endif
 
 	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(m_dxgiFactory.ReleaseAndGetAddressOf())));
+
+	//TODO : m_featureSupportTearing를 여기서 확인하자
 }
 
 void SodoApp::InitializeAdapter()
@@ -55,10 +59,22 @@ void SodoApp::InitializeAdapter()
 
 void SodoApp::InitializeOutput()
 {
+	m_dxgiOutput.Reset();
+	m_dxgiOutput6.Reset();
+
 	//NOTE : 간단히 구현하기 위해, 현재 주 디스플레이로 output 인터페이스를 생성 시도함
-	ComPtr<IDXGIOutput> tempOutput = nullptr;
-	ThrowIfFailed(m_dxgiAdapter->EnumOutputs(0, tempOutput.ReleaseAndGetAddressOf()));
-	ThrowIfFailed(tempOutput.As(&m_dxgiOutput));
+	ThrowIfFailed(m_dxgiAdapter->EnumOutputs(0, m_dxgiOutput.ReleaseAndGetAddressOf()));
+
+	m_bOutputSupportHDR = SUCCEEDED(m_dxgiOutput.As(&m_dxgiOutput6));
+
+#ifdef _DEBUG
+	OutputDebugStringW(m_bOutputSupportHDR ? L"[SODO DEBUG] 아웃풋이 HDR 제시를 지원함\n" : L"[SODO DEBUG] 아웃풋이 HDR 제시를 지원하지 않음\n");
+#endif
+
+	if (m_bOutputSupportHDR == true)
+	{
+		//TODO : m_outputDesc를 여기서 얻어내자
+	}
 
 #ifdef _DEBUG
 	DXGI_OUTPUT_DESC dxgiOutputDesc;
@@ -75,10 +91,10 @@ void SodoApp::InitializeOutput()
 void SodoApp::InitializeDisplayMode()
 {
 	UINT modeCount = 0;
-	ThrowIfFailed(m_dxgiOutput->GetDisplayModeList(m_backBufferFormat, 0, &modeCount, nullptr));
+	ThrowIfFailed(m_dxgiOutput->GetDisplayModeList(m_backBufferFormatSDR, 0, &modeCount, nullptr));
 
 	std::vector<DXGI_MODE_DESC> modeList(modeCount);
-	ThrowIfFailed(m_dxgiOutput->GetDisplayModeList(m_backBufferFormat, 0, &modeCount, &modeList[0]));
+	ThrowIfFailed(m_dxgiOutput->GetDisplayModeList(m_backBufferFormatSDR, 0, &modeCount, &modeList[0]));
 
 	if (modeList.size() <= 0)
 	{
@@ -135,6 +151,10 @@ void SodoApp::InitializeDisplayMode()
 
 void SodoApp::InitializeDevice()
 {
+	m_d3d12Device5.Reset();
+	m_d3d12Device2.Reset();
+	m_d3d12Device.Reset();
+
 #ifdef _DEBUG
 	ComPtr<ID3D12Debug1> dxgiDebug;
 	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(dxgiDebug.GetAddressOf())));
@@ -146,17 +166,24 @@ void SodoApp::InitializeDevice()
 		D3D12CreateDevice(m_dxgiAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(m_d3d12Device.ReleaseAndGetAddressOf()))
 	);
 
+	//TODO : m_bFormatSupportSDR를 지원하는지 여부를 여기서 확인하고, 지원하지 않을 시 ThrowIfFailed로 종료하자
+	//TODO : m_bFormatSupportHDR를 지원하는지 여부를 여기서 확인하자
+
 	m_bDeviceSupportMeshShader = SUCCEEDED(m_d3d12Device.As(&m_d3d12Device2));
 	m_bDeviceSupportRayTracing = SUCCEEDED(m_d3d12Device.As(&m_d3d12Device5));
 
 #ifdef _DEBUG
-	OutputDebugStringW(m_bDeviceSupportMeshShader ? L"[SODO DEBUG] 디바이스가 메시 셰이더 지원함\n" : L"[SODO DEBUG] 디바이스가 메시 셰이더 지원하지 않음\n");
-	OutputDebugStringW(m_bDeviceSupportRayTracing ? L"[SODO DEBUG] 디바이스가 레이 트레이싱 지원함\n" : L"[SODO DEBUG] 디바이스가 레이 트레이싱 지원하지 않음\n");
+	OutputDebugStringW(m_bDeviceSupportMeshShader ? L"[SODO DEBUG] 디바이스가 메시 셰이더를 지원함\n" : L"[SODO DEBUG] 디바이스가 메시 셰이더를 지원하지 않음\n");
+	OutputDebugStringW(m_bDeviceSupportRayTracing ? L"[SODO DEBUG] 디바이스가 레이 트레이싱을 지원함\n" : L"[SODO DEBUG] 디바이스가 레이 트레이싱을 지원하지 않음\n");
 #endif
 
 	if (m_bDeviceSupportRayTracing == true)
 	{
-		//TODO : m_featureSupportRayTracing, m_bFeatureSupportMeshShader를 여기서 확인하자
+		//TODO : m_featureSupportRayTracing를 여기서 확인하자
+	}
+	if (m_bDeviceSupportMeshShader == true)
+	{
+		//TODO : m_bFeatureSupportMeshShader를 여기서 확인하자
 	}
 }
 
@@ -167,13 +194,13 @@ void SodoApp::InitializeFence()
 
 void SodoApp::InitializeCommandQueue()
 {
-	D3D12_COMMAND_QUEUE_DESC d3d12QueueDesc = {};
-	d3d12QueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-	d3d12QueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-	d3d12QueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	d3d12QueueDesc.NodeMask = 0;
+	D3D12_COMMAND_QUEUE_DESC d3d12CommandQueueDesc = {};
+	d3d12CommandQueueDesc.Type		= D3D12_COMMAND_LIST_TYPE_DIRECT;
+	d3d12CommandQueueDesc.Priority	= D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+	d3d12CommandQueueDesc.Flags		= D3D12_COMMAND_QUEUE_FLAG_NONE;
+	d3d12CommandQueueDesc.NodeMask	= 0;
 	ThrowIfFailed(
-		m_d3d12Device->CreateCommandQueue(&d3d12QueueDesc, IID_PPV_ARGS(m_d3d12CommandQueue.ReleaseAndGetAddressOf()))
+		m_d3d12Device->CreateCommandQueue(&d3d12CommandQueueDesc, IID_PPV_ARGS(m_d3d12CommandQueue.ReleaseAndGetAddressOf()))
 	);
 }
 
@@ -189,6 +216,10 @@ void SodoApp::InitializeCommandAllocator()
 
 void SodoApp::InitializeCommandList()
 {
+	m_d3d12CommandList6.Reset();
+	m_d3d12CommandList4.Reset();
+	m_d3d12CommandList.Reset();
+
 	ThrowIfFailed(
 		m_d3d12Device->CreateCommandList(
 			0,
@@ -203,9 +234,61 @@ void SodoApp::InitializeCommandList()
 	m_bCommandListSupportMeshShader = SUCCEEDED(m_d3d12CommandList.As(&m_d3d12CommandList6));
 
 #ifdef _DEBUG
-	OutputDebugStringW(m_bCommandListSupportRayTracing ? L"[SODO DEBUG] 커맨드 리스트가 레이 트레이싱 지원함\n" : L"[SODO DEBUG] 커맨드 리스트가 레이 트레이싱 지원하지 않음\n");
-	OutputDebugStringW(m_bCommandListSupportMeshShader ? L"[SODO DEBUG] 커맨드 리스트가 메시 셰이더 지원함\n" : L"[SODO DEBUG] 커맨드 리스트가 메시 셰이더 지원하지 않음\n");
+	OutputDebugStringW(m_bCommandListSupportRayTracing ? L"[SODO DEBUG] 커맨드 리스트가 레이 트레이싱을 지원함\n" : L"[SODO DEBUG] 커맨드 리스트가 레이 트레이싱을 지원하지 않음\n");
+	OutputDebugStringW(m_bCommandListSupportMeshShader ? L"[SODO DEBUG] 커맨드 리스트가 메시 셰이더를 지원함\n" : L"[SODO DEBUG] 커맨드 리스트가 메시 셰이더를 지원하지 않음\n");
 #endif
  
 	m_d3d12CommandList->Close();
+}
+
+void SodoApp::InitializeSwapChain()
+{
+	m_dxgiSwapChain3.Reset();
+	m_dxgiSwapChain.Reset();
+
+	DXGI_SWAP_CHAIN_DESC1 dxgiSwapChainDesc = {};
+	dxgiSwapChainDesc.Width					= 0;
+	dxgiSwapChainDesc.Height				= 0;
+	dxgiSwapChainDesc.Format				= isSupportHDR() ? m_backBufferFormatHDR : m_backBufferFormatSDR;
+	dxgiSwapChainDesc.Stereo				= false;
+	dxgiSwapChainDesc.SampleDesc.Count		= 1;
+	dxgiSwapChainDesc.SampleDesc.Quality	= 0;
+	dxgiSwapChainDesc.BufferUsage			= DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	dxgiSwapChainDesc.BufferCount			= m_backBufferCount;
+	dxgiSwapChainDesc.Scaling				= DXGI_SCALING_STRETCH;
+	dxgiSwapChainDesc.SwapEffect			= DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	dxgiSwapChainDesc.AlphaMode				= DXGI_ALPHA_MODE_UNSPECIFIED;
+	dxgiSwapChainDesc.Flags					= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
+											| (m_bFeatureSupportTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+
+	ThrowIfFailed(
+		m_dxgiFactory->CreateSwapChainForHwnd(
+			m_d3d12CommandQueue.Get(),
+			m_hWnd,
+			&dxgiSwapChainDesc,
+			nullptr,
+			nullptr,
+			m_dxgiSwapChain.ReleaseAndGetAddressOf()
+		)
+	);
+
+	m_bSwapChainSupportHDR = SUCCEEDED(m_dxgiSwapChain.As(&m_dxgiSwapChain3));
+
+#ifdef _DEBUG
+	OutputDebugStringW(m_bSwapChainSupportHDR ? L"[SODO DEBUG] 스왑 체인이 HDR 제시를 지원함\n" : L"[SODO DEBUG] 스왑 체인이 HDR 제시를 지원하지 않음\n");
+#endif
+
+	if (m_bSwapChainSupportHDR == true)
+	{
+		//TODO : m_bColorSpaceSupportHDR을 여기서 확인하자
+
+		if (isSupportHDR() == true)
+		{
+			//TODO : 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
+		}
+		else
+		{
+			//TODO : 스왑체인에 m_backBufferColorSpaceSDR을 설정하자
+		}
+	}
 }
