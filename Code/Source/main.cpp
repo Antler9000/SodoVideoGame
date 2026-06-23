@@ -22,7 +22,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	appInstance.CreateAppWindow(hInstance, nCmdShow);
 
-	appInstance.InitializeApp();
+	appInstance.InitApp();
 
 	return appInstance.RunMessageLoop();
 }

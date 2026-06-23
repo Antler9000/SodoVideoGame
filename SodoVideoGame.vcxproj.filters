@@ -66,6 +66,10 @@
     <ClInclude Include="Code\Header\Timer.h">
       <Filter>Code\Header</Filter>
     </ClInclude>
+    <ClInclude Include="Code\Source\SodoAppInitialize.h" />
+    <ClInclude Include="Code\Header\Option.h">
+      <Filter>Code\Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui\imgui.cpp">
@@ -92,7 +96,7 @@
     <ClCompile Include="Code\Source\main.cpp">
       <Filter>Code\Source</Filter>
     </ClCompile>
-    <ClCompile Include="Code\Source\SodoAppInitialize.cpp">
+    <ClCompile Include="Code\Source\SodoAppInit.cpp">
       <Filter>Code\Source</Filter>
     </ClCompile>
     <ClCompile Include="Code\Source\SodoAppInput.cpp">

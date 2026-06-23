@@ -131,8 +131,8 @@ void SodoApp::InputMouseLeftButtonUp(WPARAM wParam, LPARAM lParam)
 		GET_Y_LPARAM(lParam)
 	);
 
-	int mouseManhattanDist = abs(GET_X_LPARAM(lParam) - m_clickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_clickedPositionClient.y);
-	bool isDrag = (mouseManhattanDist > dragThresholdDist);
+	UINT mouseManhattanDist = abs(GET_X_LPARAM(lParam) - m_clickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_clickedPositionClient.y);
+	bool isDrag = (mouseManhattanDist > m_dragThresholdDist);
 	MessageBoxW(m_hWnd, messageBuffer, isDrag ? L"좌측 마우스 드래그" : L"좌측 마우스 클릭", MB_OK);
 
 	m_bClicked = false;
@@ -164,8 +164,8 @@ void SodoApp::InputMouseRightButtonUp(WPARAM wParam, LPARAM lParam)
 		GET_Y_LPARAM(lParam)
 	);
 
-	int mouseManhattanDist = abs(GET_X_LPARAM(lParam) - m_clickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_clickedPositionClient.y);
-	bool isDragging = (mouseManhattanDist > dragThresholdDist);
+	UINT mouseManhattanDist = abs(GET_X_LPARAM(lParam) - m_clickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_clickedPositionClient.y);
+	bool isDragging = (mouseManhattanDist > m_dragThresholdDist);
 	MessageBoxW(m_hWnd, messageBuffer, isDragging ? L"우측 마우스 드래그" : L"우측 마우스 클릭", MB_OK);
 
 	m_bClicked = false;
@@ -196,8 +196,8 @@ void SodoApp::InputMouseMiddleButtonUp(WPARAM wParam, LPARAM lParam)
 		GET_Y_LPARAM(lParam)
 	);
 
-	int mouseManhattanDist = abs(GET_X_LPARAM(lParam) - m_clickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_clickedPositionClient.y);
-	bool isDrag = (mouseManhattanDist > dragThresholdDist);
+	UINT mouseManhattanDist = abs(GET_X_LPARAM(lParam) - m_clickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_clickedPositionClient.y);
+	bool isDrag = (mouseManhattanDist > m_dragThresholdDist);
 	MessageBoxW(m_hWnd, messageBuffer, isDrag ? L"중간 마우스 드래그" : L"중간 마우스 클릭", MB_OK);
 
 	m_bClicked = false;

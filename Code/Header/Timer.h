@@ -46,7 +46,7 @@ public:
 
 		m_timeFromLastCaption = m_currentTime - m_captionedTime;
 	}
-
+	
 	double GetElapsedMilliSeconds()
 	{
 		return m_timeFromStart.count();
