@@ -11,9 +11,9 @@ void SodoApp::UpdateTimer()
 	m_timer.Update();
 }
 
-//NOTE : SetWindowTextW를 너무 자주 호출하면 시스템 부하로 인해 윈도우 전체가 먹통이 되니 반복에 텀을 주자
 void SodoApp::UpdateCaption()
 {
+	//NOTE : SetWindowTextW를 너무 자주 호출하면 시스템 부하로 인해 윈도우 전체가 먹통이 되니 반복에 텀을 주자
 	if (m_timer.GetNotCaptionedMilliSeconds() > 100.0f)
 	{
 		m_timer.MarkLastCaptionTime();

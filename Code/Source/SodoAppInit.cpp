@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <d3dx12_root_signature.h>
 #include <d3d12sdklayers.h>
+#include <d3dx12.h>
 #include <d3d12.h>
 #include <d3dcommon.h>
 #include <dxgicommon.h>
@@ -246,8 +247,8 @@ void SodoApp::InitSDRSwapChain()
 	swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
-		| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+	swapChainDesc.Flags	= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
+						| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 
 	ThrowIfFailed(
 		m_factory->CreateSwapChainForHwnd(
@@ -309,25 +310,52 @@ void SodoApp::InitHDRSwapChain()
 	//여기서 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
 }
 
-void SodoApp::InitDescriptorHeapCBVSRVUAV()
+void SodoApp::InitBackBuffers()
 {
-	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
-	UINT totalCount = m_countCBV + m_countSRV + m_countUAV;
-	descriptorHeapDesc.NumDescriptors = (totalCount ? totalCount : 1);
-	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	descriptorHeapDesc.NodeMask = 0;
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+
+	m_swapChain->GetDesc1(&swapChainDesc);
+	m_backBufferWidth = swapChainDesc.Width;
+	m_backBufferHeight = swapChainDesc.Height;
+
+	for (int i = 0; i < m_backBufferCount; i++)
+	{
+		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(m_backBuffers[i].ReleaseAndGetAddressOf())));
+	}
+}
+
+void SodoApp::InitDepthStencilBuffer()
+{
+	D3D12_RESOURCE_DESC depthStencilBufferDesc = {};
+	depthStencilBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthStencilBufferDesc.Alignment = 0;
+	depthStencilBufferDesc.Width = m_backBufferWidth;
+	depthStencilBufferDesc.Height = m_backBufferHeight;
+	depthStencilBufferDesc.DepthOrArraySize = 1;
+	depthStencilBufferDesc.MipLevels = 1;
+	depthStencilBufferDesc.Format = m_depthStencilBufferFormat;
+	depthStencilBufferDesc.SampleDesc.Count = 1;
+	depthStencilBufferDesc.SampleDesc.Quality = 0;
+	depthStencilBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	depthStencilBufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE clearValue = {};
+	clearValue.Format = m_depthStencilBufferFormat;
+	clearValue.DepthStencil.Depth = 1.0f;
+	clearValue.DepthStencil.Stencil = 0;
+
+	D3D12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
 	ThrowIfFailed(
-		m_device->CreateDescriptorHeap(
-			&descriptorHeapDesc,
-			IID_PPV_ARGS(m_descriptorHeapCBVSRVUAV.ReleaseAndGetAddressOf())
+		m_device->CreateCommittedResource(
+			&heapProperties,
+			D3D12_HEAP_FLAG_NONE,
+			&depthStencilBufferDesc,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			&clearValue,
+			IID_PPV_ARGS(m_depthStencilBuffer.ReleaseAndGetAddressOf())
 		)
 	);
-
-	m_incrementSizeCBVSRVUAV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	m_cpuStartHandleCBVSRVUAV = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetCPUDescriptorHandleForHeapStart());
-	m_gpuStartHandleCBVSRVUAV = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetGPUDescriptorHandleForHeapStart());
 }
 
 void SodoApp::InitDescriptorHeapRTV()
@@ -366,4 +394,44 @@ void SodoApp::InitDescriptorHeapDSV()
 
 	m_incrementSizeDSV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	m_cpuStartHandleDSV = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapDSV->GetCPUDescriptorHandleForHeapStart());
+}
+
+void SodoApp::InitDescriptorHeapCBVSRVUAV()
+{
+	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+	UINT totalCount = m_countCBV + m_countSRV + m_countUAV;
+	descriptorHeapDesc.NumDescriptors = (totalCount ? totalCount : 1);
+	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	descriptorHeapDesc.NodeMask = 0;
+
+	ThrowIfFailed(
+		m_device->CreateDescriptorHeap(
+			&descriptorHeapDesc,
+			IID_PPV_ARGS(m_descriptorHeapCBVSRVUAV.ReleaseAndGetAddressOf())
+		)
+	);
+
+	m_incrementSizeCBVSRVUAV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_cpuStartHandleCBVSRVUAV = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetCPUDescriptorHandleForHeapStart());
+	m_gpuStartHandleCBVSRVUAV = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetGPUDescriptorHandleForHeapStart());
+}
+
+
+void SodoApp::InitRTV()
+{
+	for (int i = 0; i < m_backBufferCount; i++)
+	{
+		m_device->CreateRenderTargetView(m_backBuffers[i].Get(), nullptr, m_cpuStartHandleRTV.Offset(i, m_incrementSizeRTV));
+	}
+}
+
+void SodoApp::InitDSV()
+{
+	m_device->CreateDepthStencilView(m_depthStencilBuffer.Get(), nullptr, m_cpuStartHandleDSV);
+}
+
+void SodoApp::InitCBVSRVUAV()
+{
+
 }

@@ -26,7 +26,6 @@
     <ClInclude Include="Code\Header\SodoApp.h" />
     <ClInclude Include="Code\Header\Throw.h" />
     <ClInclude Include="Code\Header\Timer.h" />
-    <ClInclude Include="Code\Source\SodoAppInitialize.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="External\imgui\imconfig.h" />
