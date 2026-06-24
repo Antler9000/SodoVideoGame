@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <windows.h>
 
 struct OptionHDR
@@ -22,11 +22,11 @@ struct OptionHDR
 	void DebugPrint() const
 	{
 #ifdef _DEBUG
-		OutputDebugStringW(outputSupported		? L"[SODO DEBUG] HDR : ¾Æ¿ôÇ² Áö¿ø On\n"	: L"[SODO DEBUG] HDR : ¾Æ¿ôÇ² Áö¿ø off\n");
-		OutputDebugStringW(formatSupported		? L"[SODO DEBUG] HDR : Æ÷¸Ë Áö¿ø On\n"		: L"[SODO DEBUG] HDR : Æ÷¸Ë Áö¿ø off\n");
-		OutputDebugStringW(swapChainSupported	? L"[SODO DEBUG] HDR : ½º¿Ò Ã¼ÀÎ Áö¿ø On\n"	: L"[SODO DEBUG] HDR : ½º¿Ò Ã¼ÀÎ Áö¿ø off\n");
-		OutputDebugStringW(colorSpaceSupported	? L"[SODO DEBUG] HDR : »ö °ø°£ Áö¿ø On\n"	: L"[SODO DEBUG] HDR : »ö °ø°£ Áö¿ø off\n");
-		OutputDebugStringW(userEnabled			? L"[SODO DEBUG] HDR : À¯Àú È°¼ºÈ­ On\n"	: L"[SODO DEBUG] HDR : À¯Àú È°¼ºÈ­ Áö¿ø off\n");
+		OutputDebugStringW(outputSupported		? L"[SODO DEBUG] HDR : ì•„ì›ƒí’‹ ì§€ì› On\n"	: L"[SODO DEBUG] HDR : ì•„ì›ƒí’‹ ì§€ì› off\n");
+		OutputDebugStringW(formatSupported		? L"[SODO DEBUG] HDR : í¬ë§· ì§€ì› On\n"		: L"[SODO DEBUG] HDR : í¬ë§· ì§€ì› off\n");
+		OutputDebugStringW(swapChainSupported	? L"[SODO DEBUG] HDR : ìŠ¤ì™‘ ì²´ì¸ ì§€ì› On\n"	: L"[SODO DEBUG] HDR : ìŠ¤ì™‘ ì²´ì¸ ì§€ì› off\n");
+		OutputDebugStringW(colorSpaceSupported	? L"[SODO DEBUG] HDR : ìƒ‰ ê³µê°„ ì§€ì› On\n"	: L"[SODO DEBUG] HDR : ìƒ‰ ê³µê°„ ì§€ì› off\n");
+		OutputDebugStringW(userEnabled			? L"[SODO DEBUG] HDR : ìœ ì € í™œì„±í™” On\n"	: L"[SODO DEBUG] HDR : ìœ ì € í™œì„±í™” ì§€ì› off\n");
 		OutputDebugStringW(IsActive()			? L"[SODO DEBUG] => HDR On \n"				: L"[SODO DEBUG] => HDR Off \n");
 		OutputDebugStringW(L"\n");
 #endif
@@ -51,8 +51,8 @@ struct OptionTearing
 	void DebugPrint() const
 	{
 #ifdef _DEBUG
-		OutputDebugStringW(featureSupported	? L"[SODO DEBUG] Tearing : ÇÇÃ³ Áö¿ø On\n"		: L"[SODO DEBUG] Tearing : ÇÇÃ³ Áö¿ø off\n");
-		OutputDebugStringW(userEnabled		? L"[SODO DEBUG] Tearing : À¯Àú È°¼ºÈ­ On\n"	: L"[SODO DEBUG] Tearing : À¯Àú È°¼ºÈ­ Áö¿ø off\n");
+		OutputDebugStringW(featureSupported	? L"[SODO DEBUG] Tearing : í”¼ì²˜ ì§€ì› On\n"		: L"[SODO DEBUG] Tearing : í”¼ì²˜ ì§€ì› off\n");
+		OutputDebugStringW(userEnabled		? L"[SODO DEBUG] Tearing : ìœ ì € í™œì„±í™” On\n"	: L"[SODO DEBUG] Tearing : ìœ ì € í™œì„±í™” ì§€ì› off\n");
 		OutputDebugStringW(IsActive()		? L"[SODO DEBUG] => Tearing On \n"				: L"[SODO DEBUG] => Tearing Off \n");
 		OutputDebugStringW(L"\n");
 #endif
@@ -79,10 +79,10 @@ struct OptionRayTracing
 	void DebugPrint() const
 	{
 #ifdef _DEBUG
-		OutputDebugStringW(deviceSupported		? L"[SODO DEBUG] RayTracing : µð¹ÙÀÌ½º Áö¿ø On\n"		: L"[SODO DEBUG] RayTracing : µð¹ÙÀÌ½º Áö¿ø off\n");
-		OutputDebugStringW(featureSupported		? L"[SODO DEBUG] RayTracing : ÇÇÃ³ Áö¿ø On\n"			: L"[SODO DEBUG] RayTracing : ÇÇÃ³ Áö¿ø off\n");
-		OutputDebugStringW(commandListSupported	? L"[SODO DEBUG] RayTracing : Ä¿¸Çµå ¸®½ºÆ® Áö¿ø On\n"	: L"[SODO DEBUG] RayTracing : Ä¿¸Çµå ¸®½ºÆ® Áö¿ø off\n");
-		OutputDebugStringW(userEnabled			? L"[SODO DEBUG] RayTracing : À¯Àú È°¼ºÈ­ On\n"			: L"[SODO DEBUG] RayTracing : À¯Àú È°¼ºÈ­ off\n");
+		OutputDebugStringW(deviceSupported		? L"[SODO DEBUG] RayTracing : ë””ë°”ì´ìŠ¤ ì§€ì› On\n"		: L"[SODO DEBUG] RayTracing : ë””ë°”ì´ìŠ¤ ì§€ì› off\n");
+		OutputDebugStringW(featureSupported		? L"[SODO DEBUG] RayTracing : í”¼ì²˜ ì§€ì› On\n"			: L"[SODO DEBUG] RayTracing : í”¼ì²˜ ì§€ì› off\n");
+		OutputDebugStringW(commandListSupported	? L"[SODO DEBUG] RayTracing : ì»¤ë§¨ë“œ ë¦¬ìŠ¤íŠ¸ ì§€ì› On\n"	: L"[SODO DEBUG] RayTracing : ì»¤ë§¨ë“œ ë¦¬ìŠ¤íŠ¸ ì§€ì› off\n");
+		OutputDebugStringW(userEnabled			? L"[SODO DEBUG] RayTracing : ìœ ì € í™œì„±í™” On\n"			: L"[SODO DEBUG] RayTracing : ìœ ì € í™œì„±í™” off\n");
 		OutputDebugStringW(IsActive()			? L"[SODO DEBUG] => RayTracing On \n"					: L"[SODO DEBUG] => RayTracing Off \n");
 		OutputDebugStringW(L"\n");
 #endif
@@ -109,10 +109,10 @@ struct OptionMeshShader
 	void DebugPrint() const
 	{
 #ifdef _DEBUG
-		OutputDebugStringW(deviceSupported		? L"[SODO DEBUG] MeshShader : µð¹ÙÀÌ½º Áö¿ø On\n"		: L"[SODO DEBUG] MeshShader : µð¹ÙÀÌ½º Áö¿ø off\n");
-		OutputDebugStringW(featureSupported		? L"[SODO DEBUG] MeshShader : ÇÇÃ³ Áö¿ø On\n"			: L"[SODO DEBUG] MeshShader : ÇÇÃ³ Áö¿ø off\n");
-		OutputDebugStringW(commandListSupported	? L"[SODO DEBUG] MeshShader : Ä¿¸Çµå ¸®½ºÆ® Áö¿ø On\n"	: L"[SODO DEBUG] MeshShader : Ä¿¸Çµå ¸®½ºÆ® Áö¿ø off\n");
-		OutputDebugStringW(userEnabled			? L"[SODO DEBUG] MeshShader : À¯Àú È°¼ºÈ­ On\n"			: L"[SODO DEBUG] MeshShader : À¯Àú È°¼ºÈ­ off\n");
+		OutputDebugStringW(deviceSupported		? L"[SODO DEBUG] MeshShader : ë””ë°”ì´ìŠ¤ ì§€ì› On\n"		: L"[SODO DEBUG] MeshShader : ë””ë°”ì´ìŠ¤ ì§€ì› off\n");
+		OutputDebugStringW(featureSupported		? L"[SODO DEBUG] MeshShader : í”¼ì²˜ ì§€ì› On\n"			: L"[SODO DEBUG] MeshShader : í”¼ì²˜ ì§€ì› off\n");
+		OutputDebugStringW(commandListSupported	? L"[SODO DEBUG] MeshShader : ì»¤ë§¨ë“œ ë¦¬ìŠ¤íŠ¸ ì§€ì› On\n"	: L"[SODO DEBUG] MeshShader : ì»¤ë§¨ë“œ ë¦¬ìŠ¤íŠ¸ ì§€ì› off\n");
+		OutputDebugStringW(userEnabled			? L"[SODO DEBUG] MeshShader : ìœ ì € í™œì„±í™” On\n"			: L"[SODO DEBUG] MeshShader : ìœ ì € í™œì„±í™” off\n");
 		OutputDebugStringW(IsActive()			? L"[SODO DEBUG] => MeshShader On \n"					: L"[SODO DEBUG] => MeshShader Off \n");
 		OutputDebugStringW(L"\n");
 #endif

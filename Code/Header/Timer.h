@@ -1,4 +1,4 @@
-#pragma once
+Ôªø#pragma once
 #include <chrono>
 #include <ratio>
 
@@ -6,72 +6,87 @@ class Timer
 {
 public:
 
-	Timer() :
-		m_startTime(m_clock.now()),
-		m_captionedTime(m_startTime),
-		m_previousTime(m_startTime),
-		m_currentTime(m_startTime),
-		m_timeFromStart(m_currentTime - m_startTime),
-		m_timeFromLastCaption(m_currentTime - m_captionedTime),
-		m_timeFromLastFrame(m_currentTime - m_previousTime)
+	Timer() 
 	{
-
+		Reset();
 	}
 
-	~Timer()
-	{
+	~Timer() = default;
 
-	}
-
-	//NOTE : ≈∏¿Ã∏” ∞¥√º¿« ∫πªÁ ∂«¥¬ ¿Ãµø¿ª «„øÎ«œ¡ˆ æ µµ∑œ «‘
+	//NOTE : ÌÉÄÏù¥Î®∏ Í∞ùÏ≤¥Ïùò Î≥µÏÇ¨ ÎòêÎäî Ïù¥ÎèôÏùÑ ÌóàÏö©ÌïòÏßÄ ÏïäÎèÑÎ°ù Ìï®
 	Timer(const Timer& sourceTimer) = delete;
 	Timer(Timer&& sourceTimer) noexcept = delete;
 	Timer& operator = (const Timer& sourceTimer) = delete;
 	Timer& operator = (Timer&& sourceTimer) noexcept = delete;
+	
+	void Reset()
+	{
+		m_isStopped = false;
+
+		m_startedTimePoint = Clock::now();
+		m_stoppedTimePoint = m_startedTimePoint;
+		m_currentTimePoint = m_startedTimePoint;
+
+		m_pausedTime = Duration::zero();
+		m_elapsedTime = Duration::zero();
+	}
+
+	void Stop()
+	{
+		if (m_isStopped == true)
+		{
+			return;
+		}
+
+		m_isStopped = true;
+
+		m_stoppedTimePoint = Clock::now();
+	}
+
+	void Start()
+	{
+		if (m_isStopped == false)
+		{
+			return;
+		}
+
+		m_isStopped = false;
+
+		m_pausedTime += Clock::now() - m_stoppedTimePoint;
+	}
 
 	void Update()
 	{
-		m_currentTime = m_clock.now();
+		m_currentTimePoint = Clock::now();
 
-		m_timeFromStart = m_currentTime - m_startTime;
-		m_timeFromLastCaption = m_currentTime - m_captionedTime;
-		m_timeFromLastFrame = m_currentTime - m_previousTime;
-
-		m_previousTime = m_currentTime;
+		if (m_isStopped == false)
+		{
+			m_elapsedTime = (m_currentTimePoint - m_startedTimePoint) - m_pausedTime;
+		}
+		else
+		{
+			m_elapsedTime = (m_stoppedTimePoint - m_startedTimePoint) - m_pausedTime;
+		}
 	}
 
-	void MarkLastCaptionTime()
+	double GetTimeMilli() const
 	{
-		m_captionedTime = m_currentTime;
-
-		m_timeFromLastCaption = m_currentTime - m_captionedTime;
-	}
-	
-	double GetElapsedMilliSeconds()
-	{
-		return m_timeFromStart.count();
-	}
-
-	double GetNotCaptionedMilliSeconds()
-	{
-		return m_timeFromLastCaption.count();
-	}
-
-	double GetFrameMilliSeconds()
-	{
-		return m_timeFromLastFrame.count();
+		return DurationMilli(m_elapsedTime).count();
 	}
 
 private:
 
-	std::chrono::steady_clock m_clock;
+	using Clock			= std::chrono::steady_clock;
+	using TimePoint		= std::chrono::time_point<std::chrono::steady_clock>;
+	using Duration		= std::chrono::steady_clock::duration;
+	using DurationMilli	= std::chrono::duration<double, std::milli>;
 
-	std::chrono::time_point<std::chrono::steady_clock> m_startTime;
-	std::chrono::time_point<std::chrono::steady_clock> m_captionedTime;
-	std::chrono::time_point<std::chrono::steady_clock> m_previousTime;
-	std::chrono::time_point<std::chrono::steady_clock> m_currentTime;
+	bool m_isStopped;
 
-	std::chrono::duration<double, std::milli> m_timeFromStart;
-	std::chrono::duration<double, std::milli> m_timeFromLastCaption;
-	std::chrono::duration<double, std::milli> m_timeFromLastFrame;
+	TimePoint m_startedTimePoint;
+	TimePoint m_stoppedTimePoint;
+	TimePoint m_currentTimePoint;
+
+	Duration m_pausedTime;
+	Duration m_elapsedTime;
 }; 

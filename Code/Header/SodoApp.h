@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <windows.h>
 #include <d3dx12_root_signature.h>
 #include <d3d12.h>
@@ -16,7 +16,7 @@
 
 class SodoApp : public BaseApp<SodoApp>
 {
-	//NOTE : ºÎ¸ğ Å¬·¡½ºÀÇ WindowProcedure Á¤Àû ¸Ş¼Òµå¿¡¼­ º» ÀÚ½Ä Å¬·¡½ºÀÇ HandleMessage¸¦ Á÷Á¢ È£ÃâÇÒ ¼ö ÀÖµµ·Ï Ä£±¸ ¼±¾ğÀ» ÇØÁÜ
+	//NOTE : ë¶€ëª¨ í´ë˜ìŠ¤ì˜ WindowProcedure ì •ì  ë©”ì†Œë“œì—ì„œ ë³¸ ìì‹ í´ë˜ìŠ¤ì˜ HandleMessageë¥¼ ì§ì ‘ í˜¸ì¶œí•  ìˆ˜ ìˆë„ë¡ ì¹œêµ¬ ì„ ì–¸ì„ í•´ì¤Œ
 	friend BaseApp<SodoApp>;
 
 public:
@@ -42,6 +42,8 @@ public:
 		InitSDRSwapChain();
 		InitHDRSwapChain();
 		InitBackBuffers();
+		InitViewPort();
+		InitScissorRectangle();
 		InitDepthStencilBuffer();
 		InitDescriptorHeapRTV();
 		InitDescriptorHeapDSV();
@@ -49,6 +51,7 @@ public:
 		InitRTV();
 		InitDSV();
 		InitCBVSRVUAV();
+		InitTimer();
 
 		m_optionHDR.DebugPrint();
 		m_optionTearing.DebugPrint();
@@ -69,8 +72,9 @@ public:
 			}
 			else
 			{
-				UpdateTimer();
+				UpdateTimers();
 				UpdateCaption();
+				UpdateSreen();
 			}
 		}
 
@@ -91,6 +95,8 @@ private:
 	void InitSDRSwapChain();
 	void InitHDRSwapChain();
 	void InitBackBuffers();
+	void InitViewPort();
+	void InitScissorRectangle();
 	void InitDepthStencilBuffer();
 	void InitDescriptorHeapRTV();
 	void InitDescriptorHeapDSV();
@@ -98,11 +104,13 @@ private:
 	void InitRTV();
 	void InitDSV();
 	void InitCBVSRVUAV();
+	void InitTimer();
 
-	void UpdateTimer();
+	void UpdateTimers();
 	void UpdateCaption();
+	void UpdateSreen();
 
-	//NOTE : ÀÌ ¸Ş¼Òµå´Â BaseApp¿¡ ÀÛ¼®µÈ WindowProcedure Á¤Àû ¸Ş¼Òµå¿¡¼­ È£ÃâÇÔ
+	//NOTE : ì´ ë©”ì†Œë“œëŠ” BaseAppì— ì‘ì„ëœ WindowProcedure ì •ì  ë©”ì†Œë“œì—ì„œ í˜¸ì¶œí•¨
 	LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void InputMouseMove(WPARAM wParam, LPARAM lParam);
 	void InputMouseLeftButtonDown(WPARAM wParam, LPARAM lParam);
@@ -116,11 +124,11 @@ private:
 
 private:
 
-	static constexpr UINT m_backBufferCount								= 2;										//TODO : 3À¸·Î ¹Ù²ÜÁö °áÁ¤ÇÏÀÚ
+	static constexpr UINT m_backBufferCount								= 2;										//TODO : 3ìœ¼ë¡œ ë°”ê¿€ì§€ ê²°ì •í•˜ì
 	static constexpr DXGI_FORMAT m_backBufferFormatSDR					= DXGI_FORMAT_R8G8B8A8_UNORM;
-	static constexpr DXGI_FORMAT m_backBufferFormatHDR					= DXGI_FORMAT_R16G16B16A16_FLOAT;			//TODO : DXGI_FORMAT_R10G10B10A2_UNORMÀ¸·Î ¹Ù²ÜÁö °áÁ¤ÇÏÀÚ
+	static constexpr DXGI_FORMAT m_backBufferFormatHDR					= DXGI_FORMAT_R16G16B16A16_FLOAT;			//TODO : DXGI_FORMAT_R10G10B10A2_UNORMìœ¼ë¡œ ë°”ê¿€ì§€ ê²°ì •í•˜ì
 	static constexpr DXGI_COLOR_SPACE_TYPE	m_backBufferColorSpaceSDR	= DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
-	static constexpr DXGI_COLOR_SPACE_TYPE	m_backBufferColorSpaceHDR	= DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709;	//TODO : DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020À¸·Î ¹Ù²ÜÁö °áÁ¤ÇÏÀÚ (À§¿Í ¼¼Æ®)
+	static constexpr DXGI_COLOR_SPACE_TYPE	m_backBufferColorSpaceHDR	= DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709;	//TODO : DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020ìœ¼ë¡œ ë°”ê¿€ì§€ ê²°ì •í•˜ì (ìœ„ì™€ ì„¸íŠ¸)
 	static constexpr DXGI_FORMAT m_depthStencilBufferFormat				= DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	static constexpr UINT m_dragThresholdDist = 20;
@@ -134,28 +142,30 @@ private:
 	OptionTearing		m_optionTearing;
 	OptionRayTracing	m_optionRayTracing;
 	OptionMeshShader	m_optionMeshShader;
-	ComPtr<IDXGIFactory6>				m_factory;								//NOTE : (±âº») ¼º´É¼ø ¾î´ğÅÍ È¹µæ
-	ComPtr<IDXGIAdapter3>				m_adapter;								//NOTE : (±âº») ÀÚ¿øÀÇ ¸Ş¸ğ¸® »óÁÖ¼º °ü¸®
+	ComPtr<IDXGIFactory6>				m_factory;								//NOTE : (ê¸°ë³¸) ì„±ëŠ¥ìˆœ ì–´ëŒ‘í„° íšë“
+	ComPtr<IDXGIAdapter3>				m_adapter;								//NOTE : (ê¸°ë³¸) ìì›ì˜ ë©”ëª¨ë¦¬ ìƒì£¼ì„± ê´€ë¦¬
 	ComPtr<IDXGIOutput>					m_output;
-	ComPtr<IDXGIOutput6>				m_output6;								//NOTE : (¿É¼Ç) HDR ¸ğ´ÏÅÍ Á¤º¸ È¹µæ
+	ComPtr<IDXGIOutput6>				m_output6;								//NOTE : (ì˜µì…˜) HDR ëª¨ë‹ˆí„° ì •ë³´ íšë“
 	ComPtr<ID3D12Device>				m_device;
-	ComPtr<ID3D12Device2>				m_device2;								//NOTE : (¿É¼Ç) ¸Ş½Ã ¼ÎÀÌ´õ
-	ComPtr<ID3D12Device5>				m_device5;								//NOTE : (¿É¼Ç) ·¹ÀÌ Æ®·¹ÀÌ½Ì
+	ComPtr<ID3D12Device2>				m_device2;								//NOTE : (ì˜µì…˜) ë©”ì‹œ ì…°ì´ë”
+	ComPtr<ID3D12Device5>				m_device5;								//NOTE : (ì˜µì…˜) ë ˆì´ íŠ¸ë ˆì´ì‹±
 	ComPtr<ID3D12Fence>					m_fence;
 	ComPtr<ID3D12CommandQueue>			m_commandQueue;
 	ComPtr<ID3D12CommandAllocator>		m_commandAllocator;
 	ComPtr<ID3D12GraphicsCommandList>	m_commandList;
-	ComPtr<ID3D12GraphicsCommandList4>	m_commandList4;							//NOTE : (¿É¼Ç) ·¹ÀÌ Æ®·¹ÀÌ½Ì
-	ComPtr<ID3D12GraphicsCommandList6>	m_commandList6;							//NOTE : (¿É¼Ç) ¸Ş½Ã ¼ÎÀÌ´õ
-	ComPtr<IDXGISwapChain1>				m_swapChain;							//NOTE : (±âº») HWND Å¸°Ù ½º¿Ò Ã¼ÀÎ »ı¼º
-	ComPtr<IDXGISwapChain3>				m_swapChain3;							//NOTE : (¿É¼Ç) HDR Á¦½Ã
+	ComPtr<ID3D12GraphicsCommandList4>	m_commandList4;							//NOTE : (ì˜µì…˜) ë ˆì´ íŠ¸ë ˆì´ì‹±
+	ComPtr<ID3D12GraphicsCommandList6>	m_commandList6;							//NOTE : (ì˜µì…˜) ë©”ì‹œ ì…°ì´ë”
+	ComPtr<IDXGISwapChain1>				m_swapChain;							//NOTE : (ê¸°ë³¸) HWND íƒ€ê²Ÿ ìŠ¤ì™‘ ì²´ì¸ ìƒì„±
+	ComPtr<IDXGISwapChain3>				m_swapChain3;							//NOTE : (ì˜µì…˜) HDR ì œì‹œ
 	ComPtr<ID3D12Resource>				m_backBuffers[m_backBufferCount];
 	ComPtr<ID3D12Resource>				m_depthStencilBuffer;
 	ComPtr<ID3D12DescriptorHeap>		m_descriptorHeapCBVSRVUAV;
 	ComPtr<ID3D12DescriptorHeap>		m_descriptorHeapRTV;
 	ComPtr<ID3D12DescriptorHeap>		m_descriptorHeapDSV;
-	DXGI_OUTPUT_DESC1	m_outputDesc				= {};						//NOTE : (¿É¼Ç) HDR ¸ğ´ÏÅÍ Á¤º¸ È¹µæ
+	DXGI_OUTPUT_DESC1	m_outputDesc				= {};						//NOTE : (ì˜µì…˜) HDR ëª¨ë‹ˆí„° ì •ë³´ íšë“
 	DXGI_MODE_DESC		m_displayModeDesc			= {};
+	D3D12_VIEWPORT		m_viewPort					= {};
+	D3D12_RECT			m_scissorRectangle			= {};
 	UINT				m_backBufferWidth			= 0;
 	UINT				m_backBufferHeight			= 0;
 	UINT				m_currentBackBufferIndex	= 0;
@@ -170,7 +180,9 @@ private:
 	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleCBVSRVUAV;
 	CD3DX12_GPU_DESCRIPTOR_HANDLE m_gpuStartHandleCBVSRVUAV;
 
-	Timer m_timer;
+	Timer m_totalTimer;
+	Timer m_captionTimer;
+	Timer m_frameTimer;
 
 	POINT m_mousePositionClient		= { 0, 0 };
 	POINT m_clickedPositionClient	= { 0, 0 };

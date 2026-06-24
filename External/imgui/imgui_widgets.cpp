@@ -1443,7 +1443,7 @@ void ImGui::ProgressBar(float fraction, const ImVec2& size_arg, const char* over
         return;
 
     // Fraction < 0.0f will display an indeterminate progress bar animation
-    // The value must be animated along with time, so e.g. passing '-1.0f * ImGui::GetTime()' as fraction works.
+    // The value must be animated along with time, so e.g. passing '-1.0f * ImGui::GetTimeMilli()' as fraction works.
     const bool is_indeterminate = (fraction < 0.0f);
     if (!is_indeterminate)
         fraction = ImSaturate(fraction);
