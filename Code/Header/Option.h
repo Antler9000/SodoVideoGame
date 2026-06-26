@@ -1,11 +1,43 @@
 ﻿#pragma once
 #include <windows.h>
 
+struct OptionSound
+{
+	bool userEnabled	= true;
+	float mainVolume	= 100.0f;
+	float uiVolume		= 100.0f;
+	float unitVolume	= 100.0f;
+	float effectVolume	= 100.0f;
+	float musicVolume	= 100.0f;
+
+	void DebugPrint() const
+	{
+#ifdef _DEBUG
+		OutputDebugStringW(userEnabled ? L"[SODO DEBUG] Sound : 유저 활성화 On\n" : L"[SODO DEBUG]  : 유저 활성화 지원 off\n");
+		
+		wchar_t debugBuffer[128];
+
+		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : 메인 볼륨 %.0f%%\n", mainVolume);
+		OutputDebugStringW(debugBuffer);
+
+		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : UI 볼륨 %.0f%%\n", uiVolume);
+		OutputDebugStringW(debugBuffer);
+
+		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : 효과 볼륨 %.0f%%\n", unitVolume);
+		OutputDebugStringW(debugBuffer);
+
+		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : 음악 볼륨 %.0f%%\n", effectVolume);
+		OutputDebugStringW(debugBuffer);
+
+		OutputDebugStringW(L"\n");
+#endif
+	}
+};
+
 struct OptionHDR
 {
 	bool outputSupported		= false;
 	bool formatSupported		= false;
-	bool swapChainSupported		= false;
 	bool colorSpaceSupported	= false;
 	bool userEnabled			= false;
 
@@ -16,7 +48,7 @@ struct OptionHDR
 
 	bool CanBeEnabled() const
 	{
-		return outputSupported && formatSupported && swapChainSupported && colorSpaceSupported;
+		return outputSupported && formatSupported && colorSpaceSupported;
 	}
 
 	void DebugPrint() const
@@ -24,7 +56,6 @@ struct OptionHDR
 #ifdef _DEBUG
 		OutputDebugStringW(outputSupported		? L"[SODO DEBUG] HDR : 아웃풋 지원 On\n"	: L"[SODO DEBUG] HDR : 아웃풋 지원 off\n");
 		OutputDebugStringW(formatSupported		? L"[SODO DEBUG] HDR : 포맷 지원 On\n"		: L"[SODO DEBUG] HDR : 포맷 지원 off\n");
-		OutputDebugStringW(swapChainSupported	? L"[SODO DEBUG] HDR : 스왑 체인 지원 On\n"	: L"[SODO DEBUG] HDR : 스왑 체인 지원 off\n");
 		OutputDebugStringW(colorSpaceSupported	? L"[SODO DEBUG] HDR : 색 공간 지원 On\n"	: L"[SODO DEBUG] HDR : 색 공간 지원 off\n");
 		OutputDebugStringW(userEnabled			? L"[SODO DEBUG] HDR : 유저 활성화 On\n"	: L"[SODO DEBUG] HDR : 유저 활성화 지원 off\n");
 		OutputDebugStringW(IsActive()			? L"[SODO DEBUG] => HDR On \n"				: L"[SODO DEBUG] => HDR Off \n");

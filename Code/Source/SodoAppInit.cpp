@@ -1,7 +1,7 @@
 ﻿#include <windows.h>
-#include <d3dx12_root_signature.h>
 #include <d3d12sdklayers.h>
-#include <d3dx12.h>
+#include <d3dx12_root_signature.h>
+#include <d3dx12_core.h>
 #include <d3d12.h>
 #include <d3dcommon.h>
 #include <dxgicommon.h>
@@ -19,7 +19,7 @@
 #include <stdexcept>
 #include "SodoApp.h"
 #include "Option.h"
-#include "Throw.h"
+#include "Debug.h"
 
 using Microsoft::WRL::ComPtr;
 using std::wstring;
@@ -183,7 +183,7 @@ void SodoApp::InitDevice()
 
 void SodoApp::InitFence()
 {
-	ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.ReleaseAndGetAddressOf())));
+	ThrowIfFailed(m_device->CreateFence(m_currentFence, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.ReleaseAndGetAddressOf())));
 }
 
 void SodoApp::InitCommandQueue()
@@ -232,23 +232,22 @@ void SodoApp::InitCommandList()
 
 void SodoApp::InitSDRSwapChain()
 {
-	m_swapChain3.Reset();
-	m_swapChain.Reset();
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc	= {};
+	swapChainDesc.Width					= 0;
+	swapChainDesc.Height				= 0;
+	swapChainDesc.Format				= m_backBufferFormatSDR;
+	swapChainDesc.Stereo				= false;
+	swapChainDesc.SampleDesc.Count		= 1;
+	swapChainDesc.SampleDesc.Quality	= 0;
+	swapChainDesc.BufferUsage			= DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.BufferCount			= m_backBufferCount;
+	swapChainDesc.Scaling				= DXGI_SCALING_STRETCH;
+	swapChainDesc.SwapEffect			= DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapChainDesc.AlphaMode				= DXGI_ALPHA_MODE_UNSPECIFIED;
+	swapChainDesc.Flags					= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
+										| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.Width = 0;
-	swapChainDesc.Height = 0;
-	swapChainDesc.Format = m_backBufferFormatSDR;
-	swapChainDesc.Stereo = false;
-	swapChainDesc.SampleDesc.Count = 1;
-	swapChainDesc.SampleDesc.Quality = 0;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.BufferCount = m_backBufferCount;
-	swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-	swapChainDesc.Flags	= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
-						| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+	ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
 
 	ThrowIfFailed(
 		m_factory->CreateSwapChainForHwnd(
@@ -257,16 +256,13 @@ void SodoApp::InitSDRSwapChain()
 			&swapChainDesc,
 			nullptr,
 			nullptr,
-			m_swapChain.ReleaseAndGetAddressOf()
+			tempSwapChain.ReleaseAndGetAddressOf()
 		)
 	);
 
-	m_optionHDR.swapChainSupported = SUCCEEDED(m_swapChain.As(&m_swapChain3));
+	ThrowIfFailed((tempSwapChain.As(&m_swapChain)));
 
-	if (m_optionHDR.swapChainSupported == true)
-	{
-		//TODO : m_optionHDR.colorSpaceSupported를 여기서 확인하자
-	}
+	//TODO : m_optionHDR.colorSpaceSupported를 여기서 확인하자
 }
 
 void SodoApp::InitHDRSwapChain()
@@ -275,9 +271,6 @@ void SodoApp::InitHDRSwapChain()
 	{
 		return;
 	}
-
-	m_swapChain3.Reset();
-	m_swapChain.Reset();
 
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 	swapChainDesc.Width					= 0;
@@ -294,6 +287,8 @@ void SodoApp::InitHDRSwapChain()
 	swapChainDesc.Flags					= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
 										| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 
+	ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
+
 	ThrowIfFailed(
 		m_factory->CreateSwapChainForHwnd(
 			m_commandQueue.Get(),
@@ -301,13 +296,13 @@ void SodoApp::InitHDRSwapChain()
 			&swapChainDesc,
 			nullptr,
 			nullptr,
-			m_swapChain.ReleaseAndGetAddressOf()
+			tempSwapChain.ReleaseAndGetAddressOf()
 		)
 	);
 
-	ThrowIfFailed(m_swapChain.As(&m_swapChain3));
+	ThrowIfFailed(tempSwapChain.As(&m_swapChain));
 
-	//여기서 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
+	//TODO : 여기서 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
 }
 
 void SodoApp::InitBackBuffers()
@@ -317,6 +312,9 @@ void SodoApp::InitBackBuffers()
 	m_swapChain->GetDesc1(&swapChainDesc);
 	m_backBufferWidth = swapChainDesc.Width;
 	m_backBufferHeight = swapChainDesc.Height;
+	m_backBufferAspectRatio = (m_backBufferHeight ? (static_cast<float>(m_backBufferWidth) / m_backBufferHeight) : 0);
+
+	m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 	for (int i = 0; i < m_backBufferCount; i++)
 	{
@@ -438,9 +436,10 @@ void SodoApp::InitDescriptorHeapCBVSRVUAV()
 
 void SodoApp::InitRTV()
 {
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandleRTV = m_cpuStartHandleRTV;
 	for (int i = 0; i < m_backBufferCount; i++)
 	{
-		m_device->CreateRenderTargetView(m_backBuffers[i].Get(), nullptr, m_cpuStartHandleRTV.Offset(i, m_incrementSizeRTV));
+		m_device->CreateRenderTargetView(m_backBuffers[i].Get(), nullptr, cpuHandleRTV.Offset(i, m_incrementSizeRTV));
 	}
 }
 
@@ -454,9 +453,19 @@ void SodoApp::InitCBVSRVUAV()
 
 }
 
+void SodoApp::InitFenceEvent()
+{
+	m_fenceEvent = CreateEventExW(
+		nullptr,
+		nullptr,
+		0,
+		EVENT_MODIFY_STATE | SYNCHRONIZE
+	);
+
+	ThrowIfNull(m_fenceEvent);
+}
+
 void SodoApp::InitTimer()
 {
-	m_totalTimer.Reset();
-	m_captionTimer.Reset();
-	m_frameTimer.Reset();
+	ResetTimers();
 }

@@ -1,8 +1,10 @@
 ﻿#include <windows.h>
 #include <windowsx.h>
+#include <dxgi.h>
 #include <cstdio>
 #include <cstdlib>
 #include "SodoApp.h"
+#include "Debug.h"
 
 //NOTE :	WindowProc이 수행 중에는 해당 스레드의 메시지 큐에 쌓인 다른 메시지들을 처리하지 못하므로,
 //			되도록 이 안에서는 짧은 로직만 수행하도록 하고, 긴 대기가 필요한 로직은 별도 스레드로 처리하자
@@ -12,87 +14,190 @@ LRESULT SodoApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		//TODO :	이는 픽셀 단위의 마우스 커서 변화를 감지하므로, 정확도가 떨어지고 마우스 포인터 속도 설정에 영향을 받음
 		//			따라서 인게임 마우스 조작의 경우엔 본 메시지가 아니라 마우스의 이동 자체를 받아오도록 WM_INPUT을 사용하자
-		//TODO :	추가로, DirectXTK12에 인풋과 관련하여 사용 가능한 기능이 있는지 둘러보자
-	case WM_MOUSEMOVE:
-	{
-		InputMouseMove(wParam, lParam);
-
-		return 0;
-	}
-
-	case WM_LBUTTONDOWN:
-	{
-		InputMouseLeftButtonDown(wParam, lParam);
-
-		return 0;
-	}
-
-	case WM_LBUTTONUP:
-	{
-		InputMouseLeftButtonUp(wParam, lParam);
-
-		return 0;
-	}
-
-	case WM_RBUTTONDOWN:
-	{
-		InputMouseRightButtonDown(wParam, lParam);
-
-		return 0;
-	}
-
-	case WM_RBUTTONUP:
-	{
-		InputMouseRightButtonUp(wParam, lParam);
-
-		return 0;
-	}
-
-	case WM_MBUTTONDOWN:
-	{
-		InputMouseMiddleButtonDown(wParam, lParam);
-
-		return 0;
-	}
-
-	case WM_MBUTTONUP:
-	{
-		InputMouseMiddleButtonUp(wParam, lParam);
-
-		return 0;
-	}
-
-	case WM_MOUSEWHEEL:
-	{
-		InputMouseWheelScroll(wParam, lParam);
-
-		return 0;
-	}
-
-	case WM_KEYDOWN:
-	{
-		InputKeyboardDown(wParam, lParam);
-
-		return 0;
-	}
-
-	//NOTE : ALT+F4 혹은 우상단 창닫기 버튼을 이용한 종료를 처리함
-	case WM_CLOSE:
-	{
-		if (MessageBoxW(m_hWnd, L"어플리케이션을 종료합니까?", L"종료 문구", MB_OKCANCEL) == IDOK)
+		case WM_MOUSEMOVE:
 		{
-			DestroyWindow(m_hWnd);
+			InputMouseMove(wParam, lParam);
+
+			return 0;
 		}
 
-		return 0;
-	}
+		case WM_LBUTTONDOWN:
+		{
+			InputMouseLeftButtonDown(wParam, lParam);
+			
+			return 0;
+		}
 
-	case WM_DESTROY:
-	{
-		PostQuitMessage(0);
+		case WM_LBUTTONUP:
+		{
+			InputMouseLeftButtonUp(wParam, lParam);
 
-		return 0;
-	}
+			return 0;
+		}
+
+		case WM_RBUTTONDOWN:
+		{
+			InputMouseRightButtonDown(wParam, lParam);
+
+			return 0;
+		}
+
+		case WM_RBUTTONUP:
+		{
+			InputMouseRightButtonUp(wParam, lParam);
+
+			return 0;
+		}
+
+		case WM_MBUTTONDOWN:
+		{
+			InputMouseMiddleButtonDown(wParam, lParam);
+
+			return 0;
+		}
+
+		case WM_MBUTTONUP:
+		{
+			InputMouseMiddleButtonUp(wParam, lParam);
+
+			return 0;
+		}
+
+		case WM_MOUSEWHEEL:
+		{
+			InputMouseWheelScroll(wParam, lParam);
+
+			return 0;
+		}
+
+		case WM_KEYDOWN:
+		{
+			InputKeyboardDown(wParam, lParam);
+
+			return 0;
+		}
+
+		case WM_ENTERSIZEMOVE:
+		{
+			m_isResizing = true;
+			StopTimers();
+
+			return 0;
+		}
+
+		//NOTE : 창 모서리를 끌어 연장시킨 경우를 처리함
+		case WM_EXITSIZEMOVE:
+		{
+			if (m_swapChain != nullptr)
+			{
+				WaitAllCommandDone();
+
+				for (int i = 0; i < m_backBufferCount; i++)
+				{
+					m_backBuffers[i].Reset();
+				}
+
+				ThrowIfFailed(
+					m_swapChain->ResizeBuffers(
+						0,
+						0,
+						0,
+						m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR,
+						DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
+						| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0)
+					)
+				);
+
+				//TODO : 여기서 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
+
+				InitBackBuffers();
+				InitViewPort();
+				InitScissorRectangle();
+				InitDepthStencilBuffer();
+				InitRTV();
+				InitDSV();
+			}
+
+			m_isResizing = false;
+			StartTimers();
+
+			return 0;
+		}
+
+		//NOTE : 최대화 버튼을 누르는 경우를 처리함
+		case WM_SIZE:
+		{
+			if (m_isResizing == true)
+			{
+				return 0;
+			}
+
+			if (m_swapChain != nullptr)
+			{
+				WaitAllCommandDone();
+
+				for (int i = 0; i < m_backBufferCount; i++)
+				{
+					m_backBuffers[i].Reset();
+				}
+
+				ThrowIfFailed(
+					m_swapChain->ResizeBuffers(
+						0,
+						0,
+						0,
+						m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR,
+						DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
+						| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0)
+					)
+				);
+
+				//TODO : 여기서 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
+
+				InitBackBuffers();
+				InitViewPort();
+				InitScissorRectangle();
+				InitDepthStencilBuffer();
+				InitRTV();
+				InitDSV();
+			}
+
+			return 0;
+		}
+
+		case WM_ACTIVATE:
+		{
+			if (LOWORD(wParam) == WA_INACTIVE)
+			{
+				m_isInActive = true;
+				StopTimers();
+			}
+			else
+			{
+				m_isInActive = false;
+				StartTimers();
+			}
+
+			return 0;
+		}
+
+		//NOTE : ALT+F4 혹은 우상단 창닫기 버튼을 이용한 종료를 처리함
+		case WM_CLOSE:
+		{
+			if (MessageBoxW(m_hWnd, L"어플리케이션을 종료합니까?", L"종료 문구", MB_OKCANCEL) == IDOK)
+			{
+				DestroyWindow(m_hWnd);
+			}
+
+			return 0;
+		}
+
+		case WM_DESTROY:
+		{
+			PostQuitMessage(0);
+
+			return 0;
+		}
 	}
 
 	return DefWindowProc(m_hWnd, uMsg, wParam, lParam);

@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <windows.h>
-#include "Throw.h"
+#include "Debug.h"
 
 //NOTE : WindowProc에서 생성할 pThis 객체의 클래스가 자식 클래스일 수 있도록 템플릿 타입 매개변수를 사용함
 template <class DerievedApp>
@@ -95,7 +95,6 @@ public:
 
 protected:
 	
-	//NOTE : 중복 정의 문제가 안 나도록 inline 처리함
 	inline static bool	m_bNotCreated = true;
 
 	const wchar_t*		m_pAppName;

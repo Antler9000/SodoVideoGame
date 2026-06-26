@@ -24,7 +24,7 @@
     <ClInclude Include="Code\Header\BaseApp.h" />
     <ClInclude Include="Code\Header\Option.h" />
     <ClInclude Include="Code\Header\SodoApp.h" />
-    <ClInclude Include="Code\Header\Throw.h" />
+    <ClInclude Include="Code\Header\Debug.h" />
     <ClInclude Include="Code\Header\Timer.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h" />
@@ -40,6 +40,7 @@
     <ClCompile Include="Code\Source\SodoAppInit.cpp" />
     <ClCompile Include="Code\Source\SodoAppInput.cpp" />
     <ClCompile Include="Code\Source\SodoAppUpdate.cpp" />
+    <ClCompile Include="Code\Source\SodoAppUtility.cpp" />
     <ClCompile Include="External\imgui\backends\imgui_impl_dx12.cpp" />
     <ClCompile Include="External\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="External\imgui\imgui.cpp" />

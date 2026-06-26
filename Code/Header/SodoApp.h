@@ -26,7 +26,11 @@ public:
 
 	}
 
-	~SodoApp() = default;
+	~SodoApp()
+	{
+		WaitAllCommandDone();
+		CloseFenceEvent();
+	}
 
 	void InitApp()
 	{
@@ -51,8 +55,10 @@ public:
 		InitRTV();
 		InitDSV();
 		InitCBVSRVUAV();
+		InitFenceEvent();
 		InitTimer();
 
+		m_optionSound.DebugPrint();
 		m_optionHDR.DebugPrint();
 		m_optionTearing.DebugPrint();
 		m_optionRayTracing.DebugPrint();
@@ -72,9 +78,16 @@ public:
 			}
 			else
 			{
-				UpdateTimers();
-				UpdateCaption();
-				UpdateSreen();
+				if (IsStopped() == true)
+				{
+					Sleep(100);
+				}
+				else
+				{
+					UpdateTimers();
+					UpdateCaption();
+					UpdateSreen();
+				}
 			}
 		}
 
@@ -104,6 +117,7 @@ private:
 	void InitRTV();
 	void InitDSV();
 	void InitCBVSRVUAV();
+	void InitFenceEvent();
 	void InitTimer();
 
 	void UpdateTimers();
@@ -124,6 +138,11 @@ private:
 
 private:
 
+	void WaitAllCommandDone();
+	void CloseFenceEvent();
+
+private:
+
 	static constexpr UINT m_backBufferCount								= 2;										//TODO : 3으로 바꿀지 결정하자
 	static constexpr DXGI_FORMAT m_backBufferFormatSDR					= DXGI_FORMAT_R8G8B8A8_UNORM;
 	static constexpr DXGI_FORMAT m_backBufferFormatHDR					= DXGI_FORMAT_R16G16B16A16_FLOAT;			//TODO : DXGI_FORMAT_R10G10B10A2_UNORM으로 바꿀지 결정하자
@@ -138,10 +157,12 @@ private:
 	template <typename Interface>
 	using ComPtr = Microsoft::WRL::ComPtr<Interface>;
 
+	OptionSound			m_optionSound;
 	OptionHDR			m_optionHDR;
 	OptionTearing		m_optionTearing;
 	OptionRayTracing	m_optionRayTracing;
 	OptionMeshShader	m_optionMeshShader;
+
 	ComPtr<IDXGIFactory6>				m_factory;								//NOTE : (기본) 성능순 어댑터 획득
 	ComPtr<IDXGIAdapter3>				m_adapter;								//NOTE : (기본) 자원의 메모리 상주성 관리
 	ComPtr<IDXGIOutput>					m_output;
@@ -154,9 +175,8 @@ private:
 	ComPtr<ID3D12CommandAllocator>		m_commandAllocator;
 	ComPtr<ID3D12GraphicsCommandList>	m_commandList;
 	ComPtr<ID3D12GraphicsCommandList4>	m_commandList4;							//NOTE : (옵션) 레이 트레이싱
-	ComPtr<ID3D12GraphicsCommandList6>	m_commandList6;							//NOTE : (옵션) 메시 셰이더
-	ComPtr<IDXGISwapChain1>				m_swapChain;							//NOTE : (기본) HWND 타겟 스왑 체인 생성
-	ComPtr<IDXGISwapChain3>				m_swapChain3;							//NOTE : (옵션) HDR 제시
+	ComPtr<ID3D12GraphicsCommandList6>	m_commandList6;							//NOTE : (옵션) 메시 셰이더 생성
+	ComPtr<IDXGISwapChain3>				m_swapChain;							//NOTE : (기본) 백버퍼 인덱스 추적
 	ComPtr<ID3D12Resource>				m_backBuffers[m_backBufferCount];
 	ComPtr<ID3D12Resource>				m_depthStencilBuffer;
 	ComPtr<ID3D12DescriptorHeap>		m_descriptorHeapCBVSRVUAV;
@@ -164,11 +184,13 @@ private:
 	ComPtr<ID3D12DescriptorHeap>		m_descriptorHeapDSV;
 	DXGI_OUTPUT_DESC1	m_outputDesc				= {};						//NOTE : (옵션) HDR 모니터 정보 획득
 	DXGI_MODE_DESC		m_displayModeDesc			= {};
-	D3D12_VIEWPORT		m_viewPort					= {};
-	D3D12_RECT			m_scissorRectangle			= {};
+	UINT64				m_currentFence				= 0;
+	UINT				m_currentBackBufferIndex	= 0;
 	UINT				m_backBufferWidth			= 0;
 	UINT				m_backBufferHeight			= 0;
-	UINT				m_currentBackBufferIndex	= 0;
+	float				m_backBufferAspectRatio		= 0.0f;
+	D3D12_VIEWPORT		m_viewPort					= {};
+	D3D12_RECT			m_scissorRectangle			= {};
 	UINT				m_countCBV					= 0;
 	UINT				m_countSRV					= 0;
 	UINT				m_countUAV					= 0;
@@ -179,10 +201,17 @@ private:
 	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleDSV;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleCBVSRVUAV;
 	CD3DX12_GPU_DESCRIPTOR_HANDLE m_gpuStartHandleCBVSRVUAV;
-
+	 
+	bool IsStopped() { return m_isResizing || m_isInActive; }
+	bool m_isResizing = false;
+	bool m_isInActive = false;
+	void ResetTimers() { m_totalTimer.Reset(); m_captionTimer.Reset(); m_frameTimer.Reset(); }
+	void StopTimers() { if (IsStopped() == true) { m_totalTimer.Stop(); m_captionTimer.Stop(); m_frameTimer.Stop(); } }
+	void StartTimers() { if (IsStopped() == false) { m_totalTimer.Start(); m_captionTimer.Start(); m_frameTimer.Start(); } }
 	Timer m_totalTimer;
 	Timer m_captionTimer;
 	Timer m_frameTimer;
+	HANDLE m_fenceEvent = nullptr;
 
 	POINT m_mousePositionClient		= { 0, 0 };
 	POINT m_clickedPositionClient	= { 0, 0 };

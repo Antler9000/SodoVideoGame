@@ -55,6 +55,15 @@ public:
 		m_pausedTime += Clock::now() - m_stoppedTimePoint;
 	}
 
+	void Mark()
+	{
+		m_startedTimePoint = Clock::now();
+		m_stoppedTimePoint = m_startedTimePoint;
+		m_currentTimePoint = m_startedTimePoint;
+
+		m_pausedTime = Duration::zero();
+	}
+
 	void Update()
 	{
 		m_currentTimePoint = Clock::now();
