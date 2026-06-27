@@ -2,34 +2,38 @@
 #include <windows.h>
 #include <d3dx12_root_signature.h>
 #include <d3d12.h>
-#include <dxgicommon.h>
 #include <dxgi1_6.h>
 #include <dxgi1_4.h>
-#include <dxgi1_2.h>
 #include <dxgi.h>
+#include <dxgicommon.h>
 #include <dxgitype.h>
 #include <dxgiformat.h>
 #include <wrl/client.h>
+#include "imgui.h"
 #include "BaseApp.h"
+#include "Game.h"
 #include "Option.h"
 #include "Timer.h"
+#include "Alloc.h"
 
-class SodoApp : public BaseApp<SodoApp>
+class Sodo : public BaseApp<Sodo>
 {
 	//NOTE : 부모 클래스의 WindowProcedure 정적 메소드에서 본 자식 클래스의 HandleMessage를 직접 호출할 수 있도록 친구 선언을 해줌
-	friend BaseApp<SodoApp>;
+	friend BaseApp<Sodo>;
 
 public:
 
-	SodoApp() : BaseApp(L"Sodo Video Game")
+	Sodo() : BaseApp(L"Sodo Video Game")
 	{
 
 	}
 
-	~SodoApp()
+	~Sodo()
 	{
 		WaitAllCommandDone();
+
 		CloseFenceEvent();
+		CloseImGui();
 	}
 
 	void InitApp()
@@ -56,13 +60,15 @@ public:
 		InitDSV();
 		InitCBVSRVUAV();
 		InitFenceEvent();
+		InitImGui();
 		InitTimer();
 
-		m_optionSound.DebugPrint();
+		m_optionFullScreen.DebugPrint();
 		m_optionHDR.DebugPrint();
 		m_optionTearing.DebugPrint();
 		m_optionRayTracing.DebugPrint();
 		m_optionMeshShader.DebugPrint();
+		m_optionSound.DebugPrint();
 	}
 
 	int RunMessageLoop()
@@ -86,6 +92,7 @@ public:
 				{
 					UpdateTimers();
 					UpdateCaption();
+					UpdateImGui();
 					UpdateSreen();
 				}
 			}
@@ -95,6 +102,9 @@ public:
 	}
 
 private:
+
+	void CloseFenceEvent();
+	void CloseImGui();
 
 	void InitFactory();
 	void InitAdapter();
@@ -118,10 +128,12 @@ private:
 	void InitDSV();
 	void InitCBVSRVUAV();
 	void InitFenceEvent();
+	void InitImGui();
 	void InitTimer();
 
 	void UpdateTimers();
 	void UpdateCaption();
+	void UpdateImGui();
 	void UpdateSreen();
 
 	//NOTE : 이 메소드는 BaseApp에 작석된 WindowProcedure 정적 메소드에서 호출함
@@ -139,7 +151,33 @@ private:
 private:
 
 	void WaitAllCommandDone();
-	void CloseFenceEvent();
+	void ResizeScreenBuffers();
+
+	void RenderGuiInGame(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void RenderGuiLobbyMenu(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void RenderGuiPausedMenu(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void RenderGuiLoadingToGame(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void RenderGuiLoadingToLobby(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void RenderGuiOptionFromLobby(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void RenderGuiOptionFromPaused(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void RenderGuiCheckExitFromLobbyToWindows(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void RenderGuiCheckExitFromPausedToWindows(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void RenderGuiCheckExitFromPausedToLobby(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void CommonRenderGuiOption();
+	void CommonRenderGuiCheckExit(GameState from, GameState to);
+
+public:
+
+	//NOTE : ImGui의 버튼, 체크 박스 등이 수정할 수 있어야 하므로 static으로 둠
+	static inline OptionFullScreen	m_optionFullScreen;
+	static inline OptionHDR			m_optionHDR;
+	static inline OptionTearing		m_optionTearing;
+	static inline OptionRayTracing	m_optionRayTracing;
+	static inline OptionMeshShader	m_optionMeshShader;
+	static inline OptionSound		m_optionSound;
+
+	//NOTE : ImGui에 넘겨주는 콜백 함수 속에서 기능해야 하므로 static으로 둠
+	static inline ImGuiDescriptorHeapAllocator m_imGuiDescriptorHeapAllocator = {};
 
 private:
 
@@ -152,17 +190,18 @@ private:
 
 	static constexpr UINT m_dragThresholdDist = 20;
 
+	static constexpr float m_imGuiScale						= 2.0f;
+	static constexpr ImVec2 m_blankSize						= ImVec2(0.0f, 10.0f);
+	static constexpr ImVec2 m_smallButtonSize				= ImVec2(120.0f, 40.0f);
+	static constexpr ImVec2 m_mediumButtonSize				= ImVec2(240.0f, 40.0f);
+	static constexpr ImVec2 m_largeButtonSize				= ImVec2(360.0f, 40.0f);
+	static constexpr ImGuiWindowFlags m_basicGuiFlag		= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+	static constexpr UINT m_imGuiDescriptorHeapCapacity		= 64;
+
 private:
 
 	template <typename Interface>
 	using ComPtr = Microsoft::WRL::ComPtr<Interface>;
-
-	OptionSound			m_optionSound;
-	OptionHDR			m_optionHDR;
-	OptionTearing		m_optionTearing;
-	OptionRayTracing	m_optionRayTracing;
-	OptionMeshShader	m_optionMeshShader;
-
 	ComPtr<IDXGIFactory6>				m_factory;								//NOTE : (기본) 성능순 어댑터 획득
 	ComPtr<IDXGIAdapter3>				m_adapter;								//NOTE : (기본) 자원의 메모리 상주성 관리
 	ComPtr<IDXGIOutput>					m_output;
@@ -199,10 +238,12 @@ private:
 	UINT				m_incrementSizeCBVSRVUAV	= 0;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleRTV;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleDSV;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleCBVSRVUAV;
-	CD3DX12_GPU_DESCRIPTOR_HANDLE m_gpuStartHandleCBVSRVUAV;
-	 
-	bool IsStopped() { return m_isResizing || m_isInActive; }
+	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleCBVSRVUAVForImGui;
+	CD3DX12_GPU_DESCRIPTOR_HANDLE m_gpuStartHandleCBVSRVUAVForImGui;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleCBVSRVUAVForGame;
+	CD3DX12_GPU_DESCRIPTOR_HANDLE m_gpuStartHandleCBVSRVUAVForGame;
+	
+	bool IsStopped() const { return m_isResizing || m_isInActive; }
 	bool m_isResizing = false;
 	bool m_isInActive = false;
 	void ResetTimers() { m_totalTimer.Reset(); m_captionTimer.Reset(); m_frameTimer.Reset(); }
@@ -212,6 +253,7 @@ private:
 	Timer m_captionTimer;
 	Timer m_frameTimer;
 	HANDLE m_fenceEvent = nullptr;
+	GameState m_gameMode = GAME_STATE_LOBBY;
 
 	POINT m_mousePositionClient		= { 0, 0 };
 	POINT m_clickedPositionClient	= { 0, 0 };

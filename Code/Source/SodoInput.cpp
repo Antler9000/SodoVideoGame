@@ -1,64 +1,105 @@
 ﻿#include <windows.h>
 #include <windowsx.h>
-#include <dxgi.h>
 #include <cstdio>
 #include <cstdlib>
-#include "SodoApp.h"
-#include "Debug.h"
+#include "imgui.h"
+#include "Sodo.h"
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 //NOTE :	WindowProc이 수행 중에는 해당 스레드의 메시지 큐에 쌓인 다른 메시지들을 처리하지 못하므로,
 //			되도록 이 안에서는 짧은 로직만 수행하도록 하고, 긴 대기가 필요한 로직은 별도 스레드로 처리하자
-LRESULT SodoApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (ImGui_ImplWin32_WndProcHandler(m_hWnd, uMsg, wParam, lParam))
+	{
+		return 0;
+	}
+
 	switch (uMsg)
 	{
 		//TODO :	이는 픽셀 단위의 마우스 커서 변화를 감지하므로, 정확도가 떨어지고 마우스 포인터 속도 설정에 영향을 받음
 		//			따라서 인게임 마우스 조작의 경우엔 본 메시지가 아니라 마우스의 이동 자체를 받아오도록 WM_INPUT을 사용하자
 		case WM_MOUSEMOVE:
 		{
-			InputMouseMove(wParam, lParam);
+			ImGuiIO& io = ImGui::GetIO();
+
+			if (io.WantCaptureMouse == false)
+			{
+				InputMouseMove(wParam, lParam);
+			}
 
 			return 0;
 		}
 
 		case WM_LBUTTONDOWN:
 		{
-			InputMouseLeftButtonDown(wParam, lParam);
+			ImGuiIO& io = ImGui::GetIO();
+
+			if (io.WantCaptureMouse == false)
+			{
+				InputMouseLeftButtonDown(wParam, lParam);
+			}
 			
 			return 0;
 		}
 
 		case WM_LBUTTONUP:
 		{
-			InputMouseLeftButtonUp(wParam, lParam);
+			ImGuiIO& io = ImGui::GetIO();
+
+			if (io.WantCaptureMouse == false)
+			{
+				InputMouseLeftButtonUp(wParam, lParam);
+			}
 
 			return 0;
 		}
 
 		case WM_RBUTTONDOWN:
 		{
-			InputMouseRightButtonDown(wParam, lParam);
+			ImGuiIO& io = ImGui::GetIO();
+
+			if (io.WantCaptureMouse == false)
+			{
+				InputMouseRightButtonDown(wParam, lParam);
+			}
 
 			return 0;
 		}
 
 		case WM_RBUTTONUP:
 		{
-			InputMouseRightButtonUp(wParam, lParam);
+			ImGuiIO& io = ImGui::GetIO();
+
+			if (io.WantCaptureMouse == false)
+			{
+				InputMouseRightButtonUp(wParam, lParam);
+			}
 
 			return 0;
 		}
 
 		case WM_MBUTTONDOWN:
 		{
-			InputMouseMiddleButtonDown(wParam, lParam);
+			ImGuiIO& io = ImGui::GetIO();
+
+			if (io.WantCaptureMouse == false)
+			{
+				InputMouseMiddleButtonDown(wParam, lParam);
+			}
 
 			return 0;
 		}
 
 		case WM_MBUTTONUP:
 		{
-			InputMouseMiddleButtonUp(wParam, lParam);
+			ImGuiIO& io = ImGui::GetIO();
+
+			if (io.WantCaptureMouse == false)
+			{
+				InputMouseMiddleButtonUp(wParam, lParam);
+			}
 
 			return 0;
 		}
@@ -88,35 +129,7 @@ LRESULT SodoApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		//NOTE : 창 모서리를 끌어 연장시킨 경우를 처리함
 		case WM_EXITSIZEMOVE:
 		{
-			if (m_swapChain != nullptr)
-			{
-				WaitAllCommandDone();
-
-				for (int i = 0; i < m_backBufferCount; i++)
-				{
-					m_backBuffers[i].Reset();
-				}
-
-				ThrowIfFailed(
-					m_swapChain->ResizeBuffers(
-						0,
-						0,
-						0,
-						m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR,
-						DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
-						| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0)
-					)
-				);
-
-				//TODO : 여기서 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
-
-				InitBackBuffers();
-				InitViewPort();
-				InitScissorRectangle();
-				InitDepthStencilBuffer();
-				InitRTV();
-				InitDSV();
-			}
+			ResizeScreenBuffers();
 
 			m_isResizing = false;
 			StartTimers();
@@ -132,35 +145,7 @@ LRESULT SodoApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				return 0;
 			}
 
-			if (m_swapChain != nullptr)
-			{
-				WaitAllCommandDone();
-
-				for (int i = 0; i < m_backBufferCount; i++)
-				{
-					m_backBuffers[i].Reset();
-				}
-
-				ThrowIfFailed(
-					m_swapChain->ResizeBuffers(
-						0,
-						0,
-						0,
-						m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR,
-						DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
-						| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0)
-					)
-				);
-
-				//TODO : 여기서 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
-
-				InitBackBuffers();
-				InitViewPort();
-				InitScissorRectangle();
-				InitDepthStencilBuffer();
-				InitRTV();
-				InitDSV();
-			}
+			ResizeScreenBuffers();
 
 			return 0;
 		}
@@ -203,13 +188,13 @@ LRESULT SodoApp::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
 }
 
-void SodoApp::InputMouseMove(WPARAM wParam, LPARAM lParam)
+void Sodo::InputMouseMove(WPARAM wParam, LPARAM lParam)
 {
 	m_mousePositionClient.x = GET_X_LPARAM(lParam);
 	m_mousePositionClient.y = GET_Y_LPARAM(lParam);
 }
 
-void SodoApp::InputMouseLeftButtonDown(WPARAM wParam, LPARAM lParam)
+void Sodo::InputMouseLeftButtonDown(WPARAM wParam, LPARAM lParam)
 {
 	if (m_bClicked == true)
 	{
@@ -221,7 +206,7 @@ void SodoApp::InputMouseLeftButtonDown(WPARAM wParam, LPARAM lParam)
 	m_bClicked = true;
 }
 
-void SodoApp::InputMouseLeftButtonUp(WPARAM wParam, LPARAM lParam)
+void Sodo::InputMouseLeftButtonUp(WPARAM wParam, LPARAM lParam)
 {
 	wchar_t messageBuffer[64] = { };
 	swprintf_s(
@@ -243,7 +228,7 @@ void SodoApp::InputMouseLeftButtonUp(WPARAM wParam, LPARAM lParam)
 	m_bClicked = false;
 }
 
-void SodoApp::InputMouseRightButtonDown(WPARAM wParam, LPARAM lParam)
+void Sodo::InputMouseRightButtonDown(WPARAM wParam, LPARAM lParam)
 {
 	if (m_bClicked == true)
 	{
@@ -255,7 +240,7 @@ void SodoApp::InputMouseRightButtonDown(WPARAM wParam, LPARAM lParam)
 	m_bClicked = true;
 }
 
-void SodoApp::InputMouseRightButtonUp(WPARAM wParam, LPARAM lParam)
+void Sodo::InputMouseRightButtonUp(WPARAM wParam, LPARAM lParam)
 {
 	wchar_t messageBuffer[64] = { };
 	swprintf_s(
@@ -277,7 +262,7 @@ void SodoApp::InputMouseRightButtonUp(WPARAM wParam, LPARAM lParam)
 
 }
 
-void SodoApp::InputMouseMiddleButtonDown(WPARAM wParam, LPARAM lParam)
+void Sodo::InputMouseMiddleButtonDown(WPARAM wParam, LPARAM lParam)
 {
 	if (m_bClicked == true)
 	{
@@ -288,7 +273,7 @@ void SodoApp::InputMouseMiddleButtonDown(WPARAM wParam, LPARAM lParam)
 	m_clickedPositionClient.y = GET_Y_LPARAM(lParam);
 	m_bClicked = true;
 }
-void SodoApp::InputMouseMiddleButtonUp(WPARAM wParam, LPARAM lParam)
+void Sodo::InputMouseMiddleButtonUp(WPARAM wParam, LPARAM lParam)
 {
 	wchar_t messageBuffer[64] = { };
 	swprintf_s(
@@ -308,12 +293,12 @@ void SodoApp::InputMouseMiddleButtonUp(WPARAM wParam, LPARAM lParam)
 	m_bClicked = false;
 }
 
-void SodoApp::InputMouseWheelScroll(WPARAM wParam, LPARAM lParam)
+void Sodo::InputMouseWheelScroll(WPARAM wParam, LPARAM lParam)
 {
 	m_scrollDelta += GET_WHEEL_DELTA_WPARAM(wParam);
 }
 
-void SodoApp::InputKeyboardDown(WPARAM wParam, LPARAM lParam)
+void Sodo::InputKeyboardDown(WPARAM wParam, LPARAM lParam)
 {
 	//ESC를 이용한 종료를 처리함
 	if (wParam == VK_ESCAPE)

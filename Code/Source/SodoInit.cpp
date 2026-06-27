@@ -4,27 +4,31 @@
 #include <d3dx12_core.h>
 #include <d3d12.h>
 #include <d3dcommon.h>
-#include <dxgicommon.h>
 #include <dxgi1_6.h>
 #include <dxgi1_3.h>
 #include <dxgi1_2.h>
 #include <dxgi.h>
+#include <dxgicommon.h>
 #include <dxgitype.h>
 #include <wrl/client.h>
+#include <algorithm>
+#include <vector>
 #include <string>
 #include <cstdio>
 #include <cstdlib>
-#include <vector>
-#include <algorithm>
 #include <stdexcept>
-#include "SodoApp.h"
+#include "imgui.h"
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx12.h"
+#include "Sodo.h"
 #include "Option.h"
+#include "Alloc.h"
 #include "Debug.h"
 
 using Microsoft::WRL::ComPtr;
 using std::wstring;
 
-void SodoApp::InitFactory()
+void Sodo::InitFactory()
 {
 	UINT factoryFlags = 0;
 
@@ -37,7 +41,7 @@ void SodoApp::InitFactory()
 	//TODO : m_optionTearing.featureSupported를 여기서 확인하자
 }
 
-void SodoApp::InitAdapter()
+void Sodo::InitAdapter()
 {
 	//NOTE : 간단히 구현하기 위해, 가장 성능이 높은 GPU 하나로 adapter 인터페이스를 생성 시도함
 	ThrowIfFailed(
@@ -60,7 +64,7 @@ void SodoApp::InitAdapter()
 #endif
 }
 
-void SodoApp::InitOutput()
+void Sodo::InitOutput()
 {
 	m_output.Reset();
 	m_output6.Reset();
@@ -87,7 +91,7 @@ void SodoApp::InitOutput()
 #endif
 }
 
-void SodoApp::InitDisplayMode()
+void Sodo::InitDisplayMode()
 {
 	UINT modeCount = 0;
 	ThrowIfFailed(m_output->GetDisplayModeList(m_backBufferFormatSDR, 0, &modeCount, nullptr));
@@ -148,7 +152,7 @@ void SodoApp::InitDisplayMode()
 #endif
 }
 
-void SodoApp::InitDevice()
+void Sodo::InitDevice()
 {
 	m_device5.Reset();
 	m_device2.Reset();
@@ -181,12 +185,12 @@ void SodoApp::InitDevice()
 	}
 }
 
-void SodoApp::InitFence()
+void Sodo::InitFence()
 {
 	ThrowIfFailed(m_device->CreateFence(m_currentFence, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.ReleaseAndGetAddressOf())));
 }
 
-void SodoApp::InitCommandQueue()
+void Sodo::InitCommandQueue()
 {
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc = {};
 	commandQueueDesc.Type		= D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -198,7 +202,7 @@ void SodoApp::InitCommandQueue()
 	);
 }
 
-void SodoApp::InitCommandAllocator()
+void Sodo::InitCommandAllocator()
 {
 	ThrowIfFailed(
 		m_device->CreateCommandAllocator(
@@ -208,7 +212,7 @@ void SodoApp::InitCommandAllocator()
 	);
 }
 
-void SodoApp::InitCommandList()
+void Sodo::InitCommandList()
 {
 	m_commandList6.Reset();
 	m_commandList4.Reset();
@@ -230,7 +234,7 @@ void SodoApp::InitCommandList()
 	m_commandList->Close();
 }
 
-void SodoApp::InitSDRSwapChain()
+void Sodo::InitSDRSwapChain()
 {
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc	= {};
 	swapChainDesc.Width					= 0;
@@ -265,7 +269,7 @@ void SodoApp::InitSDRSwapChain()
 	//TODO : m_optionHDR.colorSpaceSupported를 여기서 확인하자
 }
 
-void SodoApp::InitHDRSwapChain()
+void Sodo::InitHDRSwapChain()
 {
 	if (m_optionHDR.IsActive() == false)
 	{
@@ -305,7 +309,7 @@ void SodoApp::InitHDRSwapChain()
 	//TODO : 여기서 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
 }
 
-void SodoApp::InitBackBuffers()
+void Sodo::InitBackBuffers()
 {
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 
@@ -322,7 +326,7 @@ void SodoApp::InitBackBuffers()
 	}
 }
 
-void SodoApp::InitViewPort()
+void Sodo::InitViewPort()
 {
 	m_viewPort.TopLeftX = 0.0f;
 	m_viewPort.TopLeftY = 0.0f;
@@ -332,7 +336,7 @@ void SodoApp::InitViewPort()
 	m_viewPort.MaxDepth = 1.0f;
 }
 
-void SodoApp::InitScissorRectangle()
+void Sodo::InitScissorRectangle()
 {
 	m_scissorRectangle.left = 0;
 	m_scissorRectangle.top = 0;
@@ -340,7 +344,7 @@ void SodoApp::InitScissorRectangle()
 	m_scissorRectangle.bottom = m_backBufferHeight;
 }
 
-void SodoApp::InitDepthStencilBuffer()
+void Sodo::InitDepthStencilBuffer()
 {
 	D3D12_RESOURCE_DESC depthStencilBufferDesc = {};
 	depthStencilBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -374,7 +378,7 @@ void SodoApp::InitDepthStencilBuffer()
 	);
 }
 
-void SodoApp::InitDescriptorHeapRTV()
+void Sodo::InitDescriptorHeapRTV()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
 	descriptorHeapDesc.NumDescriptors = m_backBufferCount;
@@ -393,7 +397,7 @@ void SodoApp::InitDescriptorHeapRTV()
 	m_cpuStartHandleRTV = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapRTV->GetCPUDescriptorHandleForHeapStart());
 }
 
-void SodoApp::InitDescriptorHeapDSV()
+void Sodo::InitDescriptorHeapDSV()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
 	descriptorHeapDesc.NumDescriptors = 1;
@@ -412,11 +416,11 @@ void SodoApp::InitDescriptorHeapDSV()
 	m_cpuStartHandleDSV = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapDSV->GetCPUDescriptorHandleForHeapStart());
 }
 
-void SodoApp::InitDescriptorHeapCBVSRVUAV()
+void Sodo::InitDescriptorHeapCBVSRVUAV()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
 	UINT totalCount = m_countCBV + m_countSRV + m_countUAV;
-	descriptorHeapDesc.NumDescriptors = (totalCount ? totalCount : 1);
+	descriptorHeapDesc.NumDescriptors = (totalCount ? totalCount : 128);
 	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	descriptorHeapDesc.NodeMask = 0;
@@ -428,13 +432,19 @@ void SodoApp::InitDescriptorHeapCBVSRVUAV()
 		)
 	);
 
+	//NOTE : 우선 ImGui가 SRV를 둘 곳을 고정적으로 남기고, 그 뒷부분부터 사용하기로 함
 	m_incrementSizeCBVSRVUAV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	m_cpuStartHandleCBVSRVUAV = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetCPUDescriptorHandleForHeapStart());
-	m_gpuStartHandleCBVSRVUAV = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetGPUDescriptorHandleForHeapStart());
+	m_cpuStartHandleCBVSRVUAVForImGui = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetCPUDescriptorHandleForHeapStart());
+	m_gpuStartHandleCBVSRVUAVForImGui = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetGPUDescriptorHandleForHeapStart());
+
+	m_cpuStartHandleCBVSRVUAVForGame = m_cpuStartHandleCBVSRVUAVForImGui;
+	m_cpuStartHandleCBVSRVUAVForGame.Offset(m_imGuiDescriptorHeapCapacity, m_incrementSizeCBVSRVUAV);
+	m_gpuStartHandleCBVSRVUAVForGame = m_gpuStartHandleCBVSRVUAVForImGui;
+	m_gpuStartHandleCBVSRVUAVForGame.Offset(m_imGuiDescriptorHeapCapacity, m_incrementSizeCBVSRVUAV);
 }
 
 
-void SodoApp::InitRTV()
+void Sodo::InitRTV()
 {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandleRTV = m_cpuStartHandleRTV;
 	for (int i = 0; i < m_backBufferCount; i++)
@@ -443,17 +453,17 @@ void SodoApp::InitRTV()
 	}
 }
 
-void SodoApp::InitDSV()
+void Sodo::InitDSV()
 {
 	m_device->CreateDepthStencilView(m_depthStencilBuffer.Get(), nullptr, m_cpuStartHandleDSV);
 }
 
-void SodoApp::InitCBVSRVUAV()
+void Sodo::InitCBVSRVUAV()
 {
 
 }
 
-void SodoApp::InitFenceEvent()
+void Sodo::InitFenceEvent()
 {
 	m_fenceEvent = CreateEventExW(
 		nullptr,
@@ -465,7 +475,54 @@ void SodoApp::InitFenceEvent()
 	ThrowIfNull(m_fenceEvent);
 }
 
-void SodoApp::InitTimer()
+void Sodo::InitImGui()
+{
+	m_imGuiDescriptorHeapAllocator.Create(m_device.Get(), m_descriptorHeapCBVSRVUAV.Get(), m_imGuiDescriptorHeapCapacity);
+
+	ImGui_ImplDX12_InitInfo init_info = {};
+	init_info.Device = m_device.Get();
+	init_info.CommandQueue = m_commandQueue.Get();
+	init_info.NumFramesInFlight = 1;
+	init_info.RTVFormat = m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR;
+
+	init_info.SrvDescriptorHeap = m_descriptorHeapCBVSRVUAV.Get();
+	init_info.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) { return m_imGuiDescriptorHeapAllocator.Alloc(out_cpu_handle, out_gpu_handle); };
+	init_info.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle) { return m_imGuiDescriptorHeapAllocator.Free(cpu_handle, gpu_handle); };
+	
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui_ImplWin32_Init(m_hWnd);
+	ImGui_ImplDX12_Init(&init_info);
+
+	ImGui::StyleColorsClassic();
+
+	ImGuiStyle& style = ImGui::GetStyle();	
+	style.ScaleAllSizes(2.0f);
+	style.FontScaleDpi = 2.0f;
+
+	ImVec4* colors = style.Colors;
+	colors[ImGuiCol_Text]				= ImVec4(0.78f, 0.74f, 0.63f, 1.0f);
+	colors[ImGuiCol_TextDisabled]		= ImVec4(0.38f, 0.38f, 0.34f, 1.0f);
+	colors[ImGuiCol_FrameBg]			= ImVec4(0.105f, 0.110f, 0.100f, 1.0f);
+	colors[ImGuiCol_FrameBgHovered]		= ImVec4(0.185f, 0.175f, 0.130f, 1.0f);
+	colors[ImGuiCol_FrameBgActive]		= ImVec4(0.260f, 0.230f, 0.140f, 1.0f);
+	colors[ImGuiCol_CheckMark]			= ImVec4(0.82f, 0.68f, 0.32f, 1.0f);
+	colors[ImGuiCol_SliderGrab]			= ImVec4(0.58f, 0.50f, 0.30f, 1.0f);
+	colors[ImGuiCol_SliderGrabActive]	= ImVec4(0.82f, 0.66f, 0.28f, 1.0f);
+	colors[ImGuiCol_WindowBg]			= ImVec4(0.075f, 0.078f, 0.075f, 1.0f);
+	colors[ImGuiCol_TitleBg]			= ImVec4(0.115f, 0.115f, 0.105f, 1.0f);
+	colors[ImGuiCol_TitleBgActive]		= ImVec4(0.180f, 0.170f, 0.145f, 1.0f);
+	colors[ImGuiCol_TitleBgCollapsed]	= ImVec4(0.060f, 0.062f, 0.060f, 1.0f);
+	colors[ImGuiCol_Button]				= ImVec4(0.210f, 0.215f, 0.200f, 1.0f);
+	colors[ImGuiCol_ButtonHovered]		= ImVec4(0.340f, 0.320f, 0.250f, 1.0f);
+	colors[ImGuiCol_ButtonActive]		= ImVec4(0.470f, 0.380f, 0.180f, 1.0f);
+	colors[ImGuiCol_Border]				= ImVec4(0.30f, 0.28f, 0.23f, 0.55f);
+	colors[ImGuiCol_Separator]			= ImVec4(0.34f, 0.31f, 0.25f, 0.65f);
+	colors[ImGuiCol_SeparatorHovered]	= ImVec4(0.45f, 0.38f, 0.34f, 0.78f);
+	colors[ImGuiCol_SeparatorActive]	= ImVec4(0.55f, 0.45f, 0.43f, 0.90f);
+}
+
+void Sodo::InitTimer()
 {
 	ResetTimers();
 }

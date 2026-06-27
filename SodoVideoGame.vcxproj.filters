@@ -57,7 +57,7 @@
     <ClInclude Include="Code\Header\BaseApp.h">
       <Filter>Code\Header</Filter>
     </ClInclude>
-    <ClInclude Include="Code\Header\SodoApp.h">
+    <ClInclude Include="Code\Header\Sodo.h">
       <Filter>Code\Header</Filter>
     </ClInclude>
     <ClInclude Include="Code\Header\Debug.h">
@@ -67,6 +67,12 @@
       <Filter>Code\Header</Filter>
     </ClInclude>
     <ClInclude Include="Code\Header\Option.h">
+      <Filter>Code\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Header\Alloc.h">
+      <Filter>Code\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Header\Game.h">
       <Filter>Code\Header</Filter>
     </ClInclude>
   </ItemGroup>
@@ -95,16 +101,22 @@
     <ClCompile Include="Code\Source\main.cpp">
       <Filter>Code\Source</Filter>
     </ClCompile>
-    <ClCompile Include="Code\Source\SodoAppInit.cpp">
+    <ClCompile Include="Code\Source\SodoInit.cpp">
       <Filter>Code\Source</Filter>
     </ClCompile>
-    <ClCompile Include="Code\Source\SodoAppInput.cpp">
+    <ClCompile Include="Code\Source\SodoInput.cpp">
       <Filter>Code\Source</Filter>
     </ClCompile>
-    <ClCompile Include="Code\Source\SodoAppUpdate.cpp">
+    <ClCompile Include="Code\Source\SodoUpdate.cpp">
       <Filter>Code\Source</Filter>
     </ClCompile>
-    <ClCompile Include="Code\Source\SodoAppUtility.cpp">
+    <ClCompile Include="Code\Source\Utility.cpp">
+      <Filter>Code\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Source\SodoClose.cpp">
+      <Filter>Code\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Source\GUI.cpp">
       <Filter>Code\Source</Filter>
     </ClCompile>
   </ItemGroup>

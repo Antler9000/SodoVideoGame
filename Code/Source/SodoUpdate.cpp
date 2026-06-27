@@ -1,19 +1,23 @@
 ﻿#include <windows.h>
-#include <d3dx12_barriers.h>
 #include <d3dx12_root_signature.h>
+#include <d3dx12_barriers.h>
 #include <d3d12.h>
-#include <dxgi1_2.h>
-#include <DirectXColors.h>
+#include <DirectXMath.h>
+#include <dxgi.h>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
-#include "SodoApp.h"
+#include "imgui.h"
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx12.h"
+#include "Sodo.h"
+#include "Game.h"
 #include "Debug.h"
 
 using namespace DirectX;
 using std::wstring;
 
-void SodoApp::UpdateTimers()
+void Sodo::UpdateTimers()
 {
 	m_totalTimer.Update();
 	m_frameTimer.Update();
@@ -21,7 +25,7 @@ void SodoApp::UpdateTimers()
 	m_frameTimer.Mark();
 }
 
-void SodoApp::UpdateCaption()
+void Sodo::UpdateCaption()
 {
 	m_captionTimer.Update();
 
@@ -50,8 +54,92 @@ void SodoApp::UpdateCaption()
 	}
 }
 
-void SodoApp::UpdateSreen()
+void Sodo::UpdateImGui()
 {
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	
+	ImGuiViewport* viewPort	= ImGui::GetMainViewport();
+	ImVec2 centerPos		= viewPort->GetCenter();
+	
+	switch (m_gameMode)
+	{
+		case GAME_STATE_IN_GAME:
+		{
+			RenderGuiInGame(viewPort, centerPos);
+
+			return;
+		}
+
+		case GAME_STATE_LOBBY:
+		{
+			RenderGuiLobbyMenu(viewPort, centerPos);
+
+			return;
+		}
+
+		case GAME_STATE_PAUSED:
+		{
+			RenderGuiPausedMenu(viewPort, centerPos);
+
+			return;
+		}
+
+		case GAME_STATE_LOADING_TO_GAME:
+		{
+			RenderGuiLoadingToGame(viewPort, centerPos);
+
+			return;
+		}
+
+		case GAME_STATE_LOADING_TO_LOBBY:
+		{
+			RenderGuiLoadingToLobby(viewPort, centerPos);
+
+			return;
+		}
+
+		case GAME_STATE_OPTION_FROM_LOBBY:
+		{
+			RenderGuiOptionFromLobby(viewPort, centerPos);
+
+			return;
+		}
+
+		case GAME_STATE_OPTION_FROM_PAUSED:
+		{
+			RenderGuiOptionFromPaused(viewPort, centerPos);
+
+			return;
+		}
+
+		case GAME_STATE_CHECK_EXIT_FROM_LOBBY_TO_WINDOWS:
+		{
+			RenderGuiCheckExitFromLobbyToWindows(viewPort, centerPos);
+
+			return;
+		}
+
+		case GAME_STATE_CHECK_EXIT_FROM_PAUSED_TO_WINDOWS:
+		{
+			RenderGuiCheckExitFromPausedToWindows(viewPort, centerPos);
+
+			return;
+		}
+
+		case GAME_STATE_CHECK_EXIT_FROM_PAUSED_TO_LOBBY:
+		{
+			RenderGuiCheckExitFromPausedToLobby(viewPort, centerPos);
+
+			return;
+		}
+	}
+}
+
+void Sodo::UpdateSreen()
+{
+	//TODO : 커맨드 얼로케이터를 여러개 두어서 병렬성을 높이자
 	WaitAllCommandDone();
 
 	ThrowIfFailed(m_commandAllocator->Reset());
@@ -76,7 +164,7 @@ void SodoApp::UpdateSreen()
 	m_commandList->RSSetViewports(1, &m_viewPort);
 	m_commandList->RSSetScissorRects(1, &m_scissorRectangle);
 
-	FLOAT sinZeroToOne = (XMScalarSin(m_totalTimer.GetTimeMilli() / 1000) + 1) / 2;
+	FLOAT sinZeroToOne = (XMScalarSin(static_cast<float>(m_totalTimer.GetTimeMilli()) / 1000) + 1) / 2;
 	FLOAT testColor[4] = { sinZeroToOne, sinZeroToOne, sinZeroToOne, 1.0f };
 	m_commandList->ClearRenderTargetView(cpuHandleRTV, testColor, 0, nullptr);
 	m_commandList->ClearDepthStencilView(
@@ -88,6 +176,9 @@ void SodoApp::UpdateSreen()
 		nullptr
 	);
 
+	ImGui::Render();
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_commandList.Get());
+	
 	CD3DX12_RESOURCE_BARRIER renderTargetToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
 		m_backBuffers[m_currentBackBufferIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,

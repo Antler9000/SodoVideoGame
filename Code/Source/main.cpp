@@ -1,6 +1,6 @@
 ﻿#include <windows.h>
 #include <crtdbg.h>
-#include "SodoApp.h"
+#include "Sodo.h"
 
 //NOTE :	DXGI, D3D12, DXC 라이브러리가 링킹되도록 지시함
 //			모든 번역 단위를 통틀어서 한 번만 지시하면 되므로 이곳 main.cpp에 작성했음
@@ -24,11 +24,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-	SodoApp appInstance;
+	Sodo sodoInstance;
 
-	appInstance.CreateAppWindow(hInstance, nCmdShow);
+	sodoInstance.CreateAppWindow(hInstance, nCmdShow);
 
-	appInstance.InitApp();
+	sodoInstance.InitApp();
 
-	return appInstance.RunMessageLoop();
+	return sodoInstance.RunMessageLoop();
 }
