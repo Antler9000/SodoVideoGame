@@ -484,7 +484,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
             // The "NoMouse" option can get us stuck with a disabled mouse! Let's provide an alternative way to fix it:
             if (io.ConfigFlags & ImGuiConfigFlags_NoMouse)
             {
-                if (fmodf((float)ImGui::GetTimeMilli(), 0.40f) < 0.20f)
+                if (fmodf((float)ImGui::GetTime(), 0.40f) < 0.20f)
                 {
                     ImGui::SameLine();
                     ImGui::Text("<<PRESS SPACE TO DISABLE>>");
@@ -2087,8 +2087,8 @@ static void DemoWindowWidgetsPlotting()
         static int values_offset = 0;
         static double refresh_time = 0.0;
         if (!animate || refresh_time == 0.0)
-            refresh_time = ImGui::GetTimeMilli();
-        while (refresh_time < ImGui::GetTimeMilli()) // Create data at fixed 60 Hz rate for the demo
+            refresh_time = ImGui::GetTime();
+        while (refresh_time < ImGui::GetTime()) // Create data at fixed 60 Hz rate for the demo
         {
             static float phase = 0.0f;
             values[values_offset] = cosf(phase);
@@ -2158,9 +2158,9 @@ static void DemoWindowWidgetsProgressBars()
         sprintf(buf, "%d/%d", (int)(progress * 1753), 1753);
         ImGui::ProgressBar(progress, ImVec2(0.f, 0.f), buf);
 
-        // Pass an animated negative value, e.g. -1.0f * (float)ImGui::GetTimeMilli() is the recommended value.
+        // Pass an animated negative value, e.g. -1.0f * (float)ImGui::GetTime() is the recommended value.
         // Adjust the factor if you want to adjust the animation speed.
-        ImGui::ProgressBar(-1.0f * (float)ImGui::GetTimeMilli(), ImVec2(0.0f, 0.0f), "Searching..");
+        ImGui::ProgressBar(-1.0f * (float)ImGui::GetTime(), ImVec2(0.0f, 0.0f), "Searching..");
         ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
         ImGui::Text("Indeterminate");
 
@@ -2482,7 +2482,7 @@ static void DemoWindowWidgetsSelectables()
             static char selected[4][4] = { { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 }, { 0, 0, 0, 1 } };
 
             // Add in a bit of silly fun...
-            const float time = (float)ImGui::GetTimeMilli();
+            const float time = (float)ImGui::GetTime();
             const bool winning_state = memchr(selected, 0, sizeof(selected)) == NULL; // If all cells are selected...
             if (winning_state)
                 ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f + 0.5f * cosf(time * 2.0f), 0.5f + 0.5f * sinf(time * 3.0f)));
@@ -4063,7 +4063,7 @@ static void DemoWindowWidgetsTooltips()
             ImGui::Text("I am a fancy tooltip");
             static float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };
             ImGui::PlotLines("Curve", arr, IM_COUNTOF(arr));
-            ImGui::Text("Sin(time) = %f", sinf((float)ImGui::GetTimeMilli()));
+            ImGui::Text("Sin(time) = %f", sinf((float)ImGui::GetTime()));
             ImGui::EndTooltip();
         }
 
@@ -4081,7 +4081,7 @@ static void DemoWindowWidgetsTooltips()
             ImGui::SetTooltip("I am following you around.");
         else if (always_on == 2 && ImGui::BeginTooltip())
         {
-            ImGui::ProgressBar(sinf((float)ImGui::GetTimeMilli()) * 0.5f + 0.5f, ImVec2(ImGui::GetFontSize() * 25, 0.0f));
+            ImGui::ProgressBar(sinf((float)ImGui::GetTime()) * 0.5f + 0.5f, ImVec2(ImGui::GetFontSize() * 25, 0.0f));
             ImGui::EndTooltip();
         }
 
@@ -9049,7 +9049,7 @@ struct ExampleAppConsole
         if (ImGui::SmallButton("Clear"))           { ClearLog(); }
         ImGui::SameLine();
         bool copy_to_clipboard = ImGui::SmallButton("Copy");
-        //static float t = 0.0f; if (ImGui::GetTimeMilli() - t > 0.02f) { t = ImGui::GetTimeMilli(); AddLog("Spam %f", t); }
+        //static float t = 0.0f; if (ImGui::GetTime() - t > 0.02f) { t = ImGui::GetTime(); AddLog("Spam %f", t); }
 
         ImGui::Separator();
 
@@ -9489,7 +9489,7 @@ static void ShowExampleAppLog(bool* p_open)
             const char* category = categories[counter % IM_COUNTOF(categories)];
             const char* word = words[counter % IM_COUNTOF(words)];
             log.AddLog("[%05d] [%s] Hello, current time is %.1f, here's a word: '%s'\n",
-                ImGui::GetFrameCount(), category, ImGui::GetTimeMilli(), word);
+                ImGui::GetFrameCount(), category, ImGui::GetTime(), word);
             counter++;
         }
     }
@@ -10124,7 +10124,7 @@ static void ShowExampleAppWindowTitles(bool*)
 
     // Using "###" to display a changing title but keep a static identifier "AnimatedTitle"
     char buf[128];
-    sprintf(buf, "Animated title %c %d###AnimatedTitle", "|/-\\"[(int)(ImGui::GetTimeMilli() / 0.25f) & 3], ImGui::GetFrameCount());
+    sprintf(buf, "Animated title %c %d###AnimatedTitle", "|/-\\"[(int)(ImGui::GetTime() / 0.25f) & 3], ImGui::GetFrameCount());
     ImGui::SetNextWindowPos(ImVec2(base_pos.x + 100, base_pos.y + 300), ImGuiCond_FirstUseEver);
     ImGui::Begin(buf);
     IMGUI_DEMO_MARKER("Examples/Manipulating window titles##3");

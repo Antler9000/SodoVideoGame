@@ -18,7 +18,7 @@ struct OptionFullScreen
 	void DebugPrint() const
 	{
 #ifdef _DEBUG
-		OutputDebugStringW(userEnabled ? L"[SODO DEBUG] FullScreen : 유저 활성화 On\n" : L"[SODO DEBUG] FullScreen : 유저 활성화 지원 off\n");
+		OutputDebugStringW(userEnabled ? L"[SODO DEBUG] FullScreen : 유저 활성화 On\n" : L"[SODO DEBUG] FullScreen : 유저 활성화 off\n");
 		OutputDebugStringW(IsActive() ? L"[SODO DEBUG] => FullScreen On \n" : L"[SODO DEBUG] => FullScreen Off \n");
 		OutputDebugStringW(L"\n");
 #endif
@@ -48,7 +48,7 @@ struct OptionHDR
 		OutputDebugStringW(outputSupported		? L"[SODO DEBUG] HDR : 아웃풋 지원 On\n"	: L"[SODO DEBUG] HDR : 아웃풋 지원 off\n");
 		OutputDebugStringW(formatSupported		? L"[SODO DEBUG] HDR : 포맷 지원 On\n"		: L"[SODO DEBUG] HDR : 포맷 지원 off\n");
 		OutputDebugStringW(colorSpaceSupported	? L"[SODO DEBUG] HDR : 색 공간 지원 On\n"	: L"[SODO DEBUG] HDR : 색 공간 지원 off\n");
-		OutputDebugStringW(userEnabled			? L"[SODO DEBUG] HDR : 유저 활성화 On\n"	: L"[SODO DEBUG] HDR : 유저 활성화 지원 off\n");
+		OutputDebugStringW(userEnabled			? L"[SODO DEBUG] HDR : 유저 활성화 On\n"	: L"[SODO DEBUG] HDR : 유저 활성화 off\n");
 		OutputDebugStringW(IsActive()			? L"[SODO DEBUG] => HDR On \n"				: L"[SODO DEBUG] => HDR Off \n");
 		OutputDebugStringW(L"\n");
 #endif
@@ -74,7 +74,7 @@ struct OptionTearing
 	{
 #ifdef _DEBUG
 		OutputDebugStringW(featureSupported	? L"[SODO DEBUG] Tearing : 피처 지원 On\n"		: L"[SODO DEBUG] Tearing : 피처 지원 off\n");
-		OutputDebugStringW(userEnabled		? L"[SODO DEBUG] Tearing : 유저 활성화 On\n"	: L"[SODO DEBUG] Tearing : 유저 활성화 지원 off\n");
+		OutputDebugStringW(userEnabled		? L"[SODO DEBUG] Tearing : 유저 활성화 On\n"	: L"[SODO DEBUG] Tearing : 유저 활성화 off\n");
 		OutputDebugStringW(IsActive()		? L"[SODO DEBUG] => Tearing On \n"				: L"[SODO DEBUG] => Tearing Off \n");
 		OutputDebugStringW(L"\n");
 #endif
@@ -153,7 +153,7 @@ struct OptionSound
 	void DebugPrint() const
 	{
 #ifdef _DEBUG
-		OutputDebugStringW(userEnabled ? L"[SODO DEBUG] Sound : 유저 활성화 On\n" : L"[SODO DEBUG]  : 유저 활성화 지원 off\n");
+		OutputDebugStringW(userEnabled ? L"[SODO DEBUG] Sound : 유저 활성화 On\n" : L"[SODO DEBUG]  : 유저 활성화 off\n");
 
 		wchar_t debugBuffer[128];
 

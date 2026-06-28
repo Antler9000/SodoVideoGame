@@ -3,27 +3,26 @@
 #include "Sodo.h"
 #include "Game.h"
 
-//TODO : 버튼을 누를 때마다 효과 사운드를 주자
-void Sodo::RenderGuiInGame(ImGuiViewport* viewPort, ImVec2 centerPos)
+void Sodo::RenderGuiInGame(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 {
 	ImVec2 pos = ImVec2(
-		viewPort->Pos.x,
-		viewPort->Pos.y + viewPort->Size.y * 0.75f
+		imGuiViewPort->Pos.x,
+		imGuiViewPort->Pos.y + imGuiViewPort->Size.y * 0.75f
 	);
 
 	ImVec2 size = ImVec2(
-		viewPort->Size.x,
-		viewPort->Size.y * 0.25f
+		imGuiViewPort->Size.x,
+		imGuiViewPort->Size.y * 0.25f
 	);
 
 	ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
 	ImGui::SetNextWindowSize(size, ImGuiCond_Always);
 
-	ImGui::Begin("In game", nullptr, m_basicGuiFlag);
+	ImGui::Begin("In game", nullptr, m_imGuiBasicFlag);
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Menu", m_smallButtonSize))
+	if (ImGui::Button("Menu", m_imGuiSmallButtonSize))
 	{
 		m_gameMode = GAME_STATE_PAUSED;
 	}
@@ -31,34 +30,34 @@ void Sodo::RenderGuiInGame(ImGuiViewport* viewPort, ImVec2 centerPos)
 	ImGui::End();
 }
 
-void Sodo::RenderGuiLobbyMenu(ImGuiViewport* viewPort, ImVec2 centerPos)
+void Sodo::RenderGuiLobbyMenu(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 {
-	ImGui::SetNextWindowPos(centerPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(imGuiCenterPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(250.0f, 330.0f), ImGuiCond_Always);
 
-	ImGui::Begin("Lobby", nullptr, m_basicGuiFlag);
+	ImGui::Begin("Lobby", nullptr, m_imGuiBasicFlag);
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Play", m_smallButtonSize))
+	if (ImGui::Button("Play", m_imGuiSmallButtonSize))
 	{
 		m_gameMode = GAME_STATE_LOADING_TO_GAME;
 	}
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Option", m_smallButtonSize))
+	if (ImGui::Button("Option", m_imGuiSmallButtonSize))
 	{
 		m_gameMode = GAME_STATE_OPTION_FROM_LOBBY;
 	}
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Exit", m_smallButtonSize))
+	if (ImGui::Button("Exit", m_imGuiSmallButtonSize))
 	{
 		m_gameMode = GAME_STATE_CHECK_EXIT_FROM_LOBBY_TO_WINDOWS;
 	}
@@ -66,43 +65,43 @@ void Sodo::RenderGuiLobbyMenu(ImGuiViewport* viewPort, ImVec2 centerPos)
 	ImGui::End();
 }
 
-void Sodo::RenderGuiPausedMenu(ImGuiViewport* viewPort, ImVec2 centerPos)
+void Sodo::RenderGuiPausedMenu(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 {
-	ImGui::SetNextWindowPos(centerPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(imGuiCenterPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(300.0f, 430.0f), ImGuiCond_Always);
 
-	ImGui::Begin("Paused", nullptr, m_basicGuiFlag);
+	ImGui::Begin("Paused", nullptr, m_imGuiBasicFlag);
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Resume", m_smallButtonSize))
+	if (ImGui::Button("Resume", m_imGuiSmallButtonSize))
 	{
 		m_gameMode = GAME_STATE_IN_GAME;
 	}
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Option", m_smallButtonSize))
+	if (ImGui::Button("Option", m_imGuiSmallButtonSize))
 	{
 		m_gameMode = GAME_STATE_OPTION_FROM_PAUSED;
 	}
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Exit to lobby", m_mediumButtonSize))
+	if (ImGui::Button("Exit to lobby", m_imGuiMediumButtonSize))
 	{
 		m_gameMode = GAME_STATE_CHECK_EXIT_FROM_PAUSED_TO_LOBBY;
 	}
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Exit to window", m_mediumButtonSize))
+	if (ImGui::Button("Exit to window", m_imGuiMediumButtonSize))
 	{
 		m_gameMode = GAME_STATE_CHECK_EXIT_FROM_PAUSED_TO_WINDOWS;
 	}
@@ -110,13 +109,13 @@ void Sodo::RenderGuiPausedMenu(ImGuiViewport* viewPort, ImVec2 centerPos)
 	ImGui::End();
 }
 
-void Sodo::RenderGuiLoadingToGame(ImGuiViewport* viewPort, ImVec2 centerPos)
+void Sodo::RenderGuiLoadingToGame(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 {
-	ImGuiWindowFlags loadingGuiFlag = m_basicGuiFlag | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground;
+	ImGuiWindowFlags loadingGuiFlag = m_imGuiBasicFlag | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground;
 
 	ImVec2 pos = ImVec2(
-		centerPos.x,
-		viewPort->Pos.y + viewPort->Size.y * 0.9f
+		imGuiCenterPos.x,
+		imGuiViewPort->Pos.y + imGuiViewPort->Size.y * 0.9f
 	);
 
 	ImGui::SetNextWindowPos(pos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
@@ -124,10 +123,10 @@ void Sodo::RenderGuiLoadingToGame(ImGuiViewport* viewPort, ImVec2 centerPos)
 
 	ImGui::Begin("Loading", nullptr, loadingGuiFlag);
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
 	//TODO : 버튼을 비활성화하고, 로딩이 다 되면 활성화하기
-	if (ImGui::Button("Press here to start", m_largeButtonSize))
+	if (ImGui::Button("Click here to start", m_imguiLargeButtonSize))
 	{
 		m_gameMode = GAME_STATE_IN_GAME;
 	}
@@ -135,13 +134,13 @@ void Sodo::RenderGuiLoadingToGame(ImGuiViewport* viewPort, ImVec2 centerPos)
 	ImGui::End();
 }
 
-void Sodo::RenderGuiLoadingToLobby(ImGuiViewport* viewPort, ImVec2 centerPos)
+void Sodo::RenderGuiLoadingToLobby(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 {
-	ImGuiWindowFlags loadingGuiFlag = m_basicGuiFlag | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground;
+	ImGuiWindowFlags loadingGuiFlag = m_imGuiBasicFlag | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground;
 
 	ImVec2 pos = ImVec2(
-		centerPos.x,
-		viewPort->Pos.y + viewPort->Size.y * 0.9f
+		imGuiCenterPos.x,
+		imGuiViewPort->Pos.y + imGuiViewPort->Size.y * 0.9f
 	);
 
 	ImGui::SetNextWindowPos(pos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
@@ -149,10 +148,10 @@ void Sodo::RenderGuiLoadingToLobby(ImGuiViewport* viewPort, ImVec2 centerPos)
 
 	ImGui::Begin("Loading", nullptr, loadingGuiFlag);
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
 	//TODO : 로비로의 로딩은 완료되면 버튼 없이 자동으로 수행되도록 하기
-	if (ImGui::Button("Press here to end", m_largeButtonSize))
+	if (ImGui::Button("Click here to end", m_imguiLargeButtonSize))
 	{
 		m_gameMode = GAME_STATE_LOBBY;
 	}
@@ -160,14 +159,14 @@ void Sodo::RenderGuiLoadingToLobby(ImGuiViewport* viewPort, ImVec2 centerPos)
 	ImGui::End();
 }
 
-void Sodo::RenderGuiOptionFromLobby(ImGuiViewport* viewPort, ImVec2 centerPos)
+void Sodo::RenderGuiOptionFromLobby(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 {
-	ImGui::SetNextWindowPos(centerPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(imGuiCenterPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(700.0f, 770.0f), ImGuiCond_Always);
 
-	ImGui::Begin("Option", nullptr, m_basicGuiFlag);
+	ImGui::Begin("Option", nullptr, m_imGuiBasicFlag);
 
-	if (ImGui::Button("Back", m_smallButtonSize))
+	if (ImGui::Button("Back", m_imGuiSmallButtonSize))
 	{
 		m_gameMode = GAME_STATE_LOBBY;
 	}
@@ -177,14 +176,14 @@ void Sodo::RenderGuiOptionFromLobby(ImGuiViewport* viewPort, ImVec2 centerPos)
 	ImGui::End();
 }
 
-void Sodo::RenderGuiOptionFromPaused(ImGuiViewport* viewPort, ImVec2 centerPos)
+void Sodo::RenderGuiOptionFromPaused(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 {
-	ImGui::SetNextWindowPos(centerPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(imGuiCenterPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(700.0f, 750.0f), ImGuiCond_Always);
 
-	ImGui::Begin("Option", nullptr, m_basicGuiFlag);
+	ImGui::Begin("Option", nullptr, m_imGuiBasicFlag);
 
-	if (ImGui::Button("Back", m_smallButtonSize))
+	if (ImGui::Button("Back", m_imGuiSmallButtonSize))
 	{
 		m_gameMode = GAME_STATE_PAUSED;
 	}
@@ -194,14 +193,14 @@ void Sodo::RenderGuiOptionFromPaused(ImGuiViewport* viewPort, ImVec2 centerPos)
 	ImGui::End();
 }
 
-void Sodo::RenderGuiCheckExitFromLobbyToWindows(ImGuiViewport* viewPort, ImVec2 centerPos)
+void Sodo::RenderGuiCheckExitFromLobbyToWindows(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 {
-	ImGui::SetNextWindowPos(centerPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(imGuiCenterPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(600.0f, 200.0f), ImGuiCond_Always);
 
-	ImGui::Begin("Check", nullptr, m_basicGuiFlag);
+	ImGui::Begin("Check", nullptr, m_imGuiBasicFlag);
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
 	ImGui::Text("Do you really want to exit to window?");
 
@@ -210,14 +209,14 @@ void Sodo::RenderGuiCheckExitFromLobbyToWindows(ImGuiViewport* viewPort, ImVec2 
 	ImGui::End();
 }
 
-void Sodo::RenderGuiCheckExitFromPausedToWindows(ImGuiViewport* viewPort, ImVec2 centerPos)
+void Sodo::RenderGuiCheckExitFromPausedToWindows(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 {
-	ImGui::SetNextWindowPos(centerPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(imGuiCenterPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(600.0f, 200.0f), ImGuiCond_Always);
 
-	ImGui::Begin("Check", nullptr, m_basicGuiFlag);
+	ImGui::Begin("Check", nullptr, m_imGuiBasicFlag);
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
 	ImGui::Text("Do you really want to exit to window?");
 
@@ -226,14 +225,14 @@ void Sodo::RenderGuiCheckExitFromPausedToWindows(ImGuiViewport* viewPort, ImVec2
 	ImGui::End();
 }
 
-void Sodo::RenderGuiCheckExitFromPausedToLobby(ImGuiViewport* viewPort, ImVec2 centerPos)
+void Sodo::RenderGuiCheckExitFromPausedToLobby(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 {
-	ImGui::SetNextWindowPos(centerPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(imGuiCenterPos, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(600.0f, 200.0f), ImGuiCond_Always);
 
-	ImGui::Begin("Check", nullptr, m_basicGuiFlag);
+	ImGui::Begin("Check", nullptr, m_imGuiBasicFlag);
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
 	ImGui::Text("Do you really want to exit to lobby?");
 
@@ -244,9 +243,10 @@ void Sodo::RenderGuiCheckExitFromPausedToLobby(ImGuiViewport* viewPort, ImVec2 c
 
 void Sodo::CommonRenderGuiOption()
 {
-	ImGui::Dummy(m_blankSize);
+	bool previousFullScreenState = m_optionFullScreen.IsActive();
+	bool previousHDRState = m_optionHDR.IsActive();
 
-	//TODO : 화면, 그래픽 옵션 값이 변화할 때마다 그래픽 요소를 초기화하기
+	ImGui::Dummy(m_imGuiSpacingSize);
 
 	ImGui::Text("Display");
 	ImGui::Checkbox("Full Screen", &m_optionFullScreen.userEnabled);
@@ -258,7 +258,7 @@ void Sodo::CommonRenderGuiOption()
 	ImGui::Checkbox("VRR", &m_optionTearing.userEnabled);
 	ImGui::EndDisabled();
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
 
 	ImGui::Text("Graphics");
@@ -269,7 +269,7 @@ void Sodo::CommonRenderGuiOption()
 	ImGui::Checkbox("Mesh Shader", &m_optionMeshShader.userEnabled);
 	ImGui::EndDisabled();
 
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
 
 	ImGui::Text("Sound");
@@ -278,20 +278,32 @@ void Sodo::CommonRenderGuiOption()
 	ImGui::SliderFloat("UI Volume", &m_optionSound.uiVolume, 0.0f, 100.0f, "%.0f%%");
 	ImGui::SliderFloat("Effect Volume", &m_optionSound.effectVolume, 0.0f, 100.0f, "%.0f%%");
 	ImGui::SliderFloat("Music Volume", &m_optionSound.musicVolume, 0.0f, 100.0f, "%.0f%%");
+
+	bool nowFullScreenState = m_optionFullScreen.IsActive();
+	bool nowHDRState = m_optionHDR.IsActive();
+
+	if (previousFullScreenState != nowFullScreenState)
+	{
+		m_needResetFullScreen = true;
+	}
+	if (previousHDRState != nowHDRState)
+	{
+		m_needResetHDR = true;
+	}
 }
 
 void Sodo::CommonRenderGuiCheckExit(GameState from, GameState to)
 {
-	ImGui::Dummy(m_blankSize);
+	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("No", m_smallButtonSize))
+	if (ImGui::Button("No", m_imGuiSmallButtonSize))
 	{
 		m_gameMode = from;
 	}
 
 	ImGui::SameLine();
 
-	if (ImGui::Button("Yes", m_smallButtonSize))
+	if (ImGui::Button("Yes", m_imGuiSmallButtonSize))
 	{
 		if (to == GAME_STATE_TERMINATE)
 		{

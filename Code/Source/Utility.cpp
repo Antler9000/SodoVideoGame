@@ -24,8 +24,20 @@ void Sodo::WaitAllCommandDone()
 	}
 }
 
-void Sodo::ResizeScreenBuffers()
+void Sodo::ResetScreenSetting()
 {
+	if (m_needResetFullScreen == true)
+	{
+		if (m_optionFullScreen.userEnabled == true)
+		{
+			SetBorderlessFullScreenMode();
+		}
+		else
+		{
+			SetToWindowedMode();
+		}
+	}
+
 	if (m_swapChain != nullptr)
 	{
 		WaitAllCommandDone();
@@ -46,7 +58,14 @@ void Sodo::ResizeScreenBuffers()
 			)
 		);
 
-		//TODO : 여기서 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
+		if (m_optionHDR.IsActive() == true)
+		{
+			m_swapChain->SetColorSpace1(m_backBufferColorSpaceHDR);
+		}
+		else
+		{
+			m_swapChain->SetColorSpace1(m_backBufferColorSpaceSDR);
+		}
 
 		InitBackBuffers();
 		InitViewPort();
@@ -54,5 +73,19 @@ void Sodo::ResizeScreenBuffers()
 		InitDepthStencilBuffer();
 		InitRTV();
 		InitDSV();
+		InitImGui();
 	}
+
+	m_needResetHDR = false;
+	m_needResetFullScreen = false;
+}
+
+void Sodo::SetBorderlessFullScreenMode()
+{
+	//TODO : 작성하자
+}
+
+void Sodo::SetToWindowedMode()
+{
+	//TODO : 작성하자
 }

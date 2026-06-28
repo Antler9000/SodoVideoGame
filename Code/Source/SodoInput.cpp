@@ -18,8 +18,6 @@ LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	switch (uMsg)
 	{
-		//TODO :	이는 픽셀 단위의 마우스 커서 변화를 감지하므로, 정확도가 떨어지고 마우스 포인터 속도 설정에 영향을 받음
-		//			따라서 인게임 마우스 조작의 경우엔 본 메시지가 아니라 마우스의 이동 자체를 받아오도록 WM_INPUT을 사용하자
 		case WM_MOUSEMOVE:
 		{
 			ImGuiIO& io = ImGui::GetIO();
@@ -129,7 +127,7 @@ LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		//NOTE : 창 모서리를 끌어 연장시킨 경우를 처리함
 		case WM_EXITSIZEMOVE:
 		{
-			ResizeScreenBuffers();
+			ResetScreenSetting();
 
 			m_isResizing = false;
 			StartTimers();
@@ -145,7 +143,7 @@ LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				return 0;
 			}
 
-			ResizeScreenBuffers();
+			ResetScreenSetting();
 
 			return 0;
 		}

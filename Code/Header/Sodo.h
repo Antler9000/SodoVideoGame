@@ -43,12 +43,13 @@ public:
 		InitOutput();
 		InitDisplayMode();
 		InitDevice();
+		InitFormatSupport();
 		InitFence();
 		InitCommandQueue();
 		InitCommandAllocator();
 		InitCommandList();
-		InitSDRSwapChain();
-		InitHDRSwapChain();
+		InitHDRSwapChainSupport();
+		InitSwapChain();
 		InitBackBuffers();
 		InitViewPort();
 		InitScissorRectangle();
@@ -82,6 +83,10 @@ public:
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 			}
+			else if (m_needResetHDR || m_needResetFullScreen)
+			{
+				ResetScreenSetting();
+			}
 			else
 			{
 				if (IsStopped() == true)
@@ -111,12 +116,13 @@ private:
 	void InitOutput();
 	void InitDisplayMode();
 	void InitDevice();
+	void InitFormatSupport();
 	void InitFence();
 	void InitCommandQueue();
 	void InitCommandAllocator();
 	void InitCommandList();
-	void InitSDRSwapChain();
-	void InitHDRSwapChain();
+	void InitHDRSwapChainSupport();
+	void InitSwapChain();
 	void InitBackBuffers();
 	void InitViewPort();
 	void InitScissorRectangle();
@@ -151,18 +157,20 @@ private:
 private:
 
 	void WaitAllCommandDone();
-	void ResizeScreenBuffers();
+	void ResetScreenSetting();
+	void SetBorderlessFullScreenMode();
+	void SetToWindowedMode();
 
-	void RenderGuiInGame(ImGuiViewport* viewPort, ImVec2 centerPos);
-	void RenderGuiLobbyMenu(ImGuiViewport* viewPort, ImVec2 centerPos);
-	void RenderGuiPausedMenu(ImGuiViewport* viewPort, ImVec2 centerPos);
-	void RenderGuiLoadingToGame(ImGuiViewport* viewPort, ImVec2 centerPos);
-	void RenderGuiLoadingToLobby(ImGuiViewport* viewPort, ImVec2 centerPos);
-	void RenderGuiOptionFromLobby(ImGuiViewport* viewPort, ImVec2 centerPos);
-	void RenderGuiOptionFromPaused(ImGuiViewport* viewPort, ImVec2 centerPos);
-	void RenderGuiCheckExitFromLobbyToWindows(ImGuiViewport* viewPort, ImVec2 centerPos);
-	void RenderGuiCheckExitFromPausedToWindows(ImGuiViewport* viewPort, ImVec2 centerPos);
-	void RenderGuiCheckExitFromPausedToLobby(ImGuiViewport* viewPort, ImVec2 centerPos);
+	void RenderGuiInGame(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
+	void RenderGuiLobbyMenu(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
+	void RenderGuiPausedMenu(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
+	void RenderGuiLoadingToGame(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
+	void RenderGuiLoadingToLobby(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
+	void RenderGuiOptionFromLobby(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
+	void RenderGuiOptionFromPaused(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
+	void RenderGuiCheckExitFromLobbyToWindows(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
+	void RenderGuiCheckExitFromPausedToWindows(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
+	void RenderGuiCheckExitFromPausedToLobby(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
 	void CommonRenderGuiOption();
 	void CommonRenderGuiCheckExit(GameState from, GameState to);
 
@@ -180,28 +188,29 @@ public:
 	static inline ImGuiDescriptorHeapAllocator m_imGuiDescriptorHeapAllocator = {};
 
 private:
-
-	static constexpr UINT m_backBufferCount								= 2;										//TODO : 3으로 바꿀지 결정하자
+	//TODO : HDR을 (DXGI_FORMAT_R10G10B10A2_UNORM, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020)으로 바꿀지 결정하자
+	static constexpr UINT m_backBufferCount								= 2;
 	static constexpr DXGI_FORMAT m_backBufferFormatSDR					= DXGI_FORMAT_R8G8B8A8_UNORM;
-	static constexpr DXGI_FORMAT m_backBufferFormatHDR					= DXGI_FORMAT_R16G16B16A16_FLOAT;			//TODO : DXGI_FORMAT_R10G10B10A2_UNORM으로 바꿀지 결정하자
+	static constexpr DXGI_FORMAT m_backBufferFormatHDR					= DXGI_FORMAT_R16G16B16A16_FLOAT;
 	static constexpr DXGI_COLOR_SPACE_TYPE	m_backBufferColorSpaceSDR	= DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
-	static constexpr DXGI_COLOR_SPACE_TYPE	m_backBufferColorSpaceHDR	= DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709;	//TODO : DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020으로 바꿀지 결정하자 (위와 세트)
+	static constexpr DXGI_COLOR_SPACE_TYPE	m_backBufferColorSpaceHDR	= DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709;
 	static constexpr DXGI_FORMAT m_depthStencilBufferFormat				= DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	static constexpr UINT m_dragThresholdDist = 20;
 
 	static constexpr float m_imGuiScale						= 2.0f;
-	static constexpr ImVec2 m_blankSize						= ImVec2(0.0f, 10.0f);
-	static constexpr ImVec2 m_smallButtonSize				= ImVec2(120.0f, 40.0f);
-	static constexpr ImVec2 m_mediumButtonSize				= ImVec2(240.0f, 40.0f);
-	static constexpr ImVec2 m_largeButtonSize				= ImVec2(360.0f, 40.0f);
-	static constexpr ImGuiWindowFlags m_basicGuiFlag		= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+	static constexpr ImVec2 m_imGuiSpacingSize				= ImVec2(0.0f, 10.0f);
+	static constexpr ImVec2 m_imGuiSmallButtonSize			= ImVec2(120.0f, 40.0f);
+	static constexpr ImVec2 m_imGuiMediumButtonSize			= ImVec2(240.0f, 40.0f);
+	static constexpr ImVec2 m_imguiLargeButtonSize			= ImVec2(360.0f, 40.0f);
+	static constexpr ImGuiWindowFlags m_imGuiBasicFlag		= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 	static constexpr UINT m_imGuiDescriptorHeapCapacity		= 64;
 
 private:
 
 	template <typename Interface>
 	using ComPtr = Microsoft::WRL::ComPtr<Interface>;
+
 	ComPtr<IDXGIFactory6>				m_factory;								//NOTE : (기본) 성능순 어댑터 획득
 	ComPtr<IDXGIAdapter3>				m_adapter;								//NOTE : (기본) 자원의 메모리 상주성 관리
 	ComPtr<IDXGIOutput>					m_output;
@@ -228,6 +237,8 @@ private:
 	UINT				m_backBufferWidth			= 0;
 	UINT				m_backBufferHeight			= 0;
 	float				m_backBufferAspectRatio		= 0.0f;
+	bool				m_needResetHDR				= false;
+	bool				m_needResetFullScreen		= false;
 	D3D12_VIEWPORT		m_viewPort					= {};
 	D3D12_RECT			m_scissorRectangle			= {};
 	UINT				m_countCBV					= 0;
@@ -259,4 +270,6 @@ private:
 	POINT m_clickedPositionClient	= { 0, 0 };
 	bool m_bClicked					= false;
 	int m_scrollDelta				= 0;
+
+	bool m_imGuiInitialized = false;
 };

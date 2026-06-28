@@ -60,86 +60,85 @@ void Sodo::UpdateImGui()
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 	
-	ImGuiViewport* viewPort	= ImGui::GetMainViewport();
-	ImVec2 centerPos		= viewPort->GetCenter();
-	
+	ImGuiViewport* imGuiViewPort = ImGui::GetMainViewport();
+	ImVec2 imGuiCenterPos = imGuiViewPort->GetCenter();
+
 	switch (m_gameMode)
 	{
 		case GAME_STATE_IN_GAME:
 		{
-			RenderGuiInGame(viewPort, centerPos);
+			RenderGuiInGame(imGuiViewPort, imGuiCenterPos);
 
-			return;
+			break;
 		}
 
 		case GAME_STATE_LOBBY:
 		{
-			RenderGuiLobbyMenu(viewPort, centerPos);
+			RenderGuiLobbyMenu(imGuiViewPort, imGuiCenterPos);
 
-			return;
+			break;
 		}
 
 		case GAME_STATE_PAUSED:
 		{
-			RenderGuiPausedMenu(viewPort, centerPos);
+			RenderGuiPausedMenu(imGuiViewPort, imGuiCenterPos);
 
-			return;
+			break;
 		}
 
 		case GAME_STATE_LOADING_TO_GAME:
 		{
-			RenderGuiLoadingToGame(viewPort, centerPos);
+			RenderGuiLoadingToGame(imGuiViewPort, imGuiCenterPos);
 
-			return;
+			break;
 		}
 
 		case GAME_STATE_LOADING_TO_LOBBY:
 		{
-			RenderGuiLoadingToLobby(viewPort, centerPos);
+			RenderGuiLoadingToLobby(imGuiViewPort, imGuiCenterPos);
 
-			return;
+			break;
 		}
 
 		case GAME_STATE_OPTION_FROM_LOBBY:
 		{
-			RenderGuiOptionFromLobby(viewPort, centerPos);
+			RenderGuiOptionFromLobby(imGuiViewPort, imGuiCenterPos);
 
-			return;
+			break;
 		}
 
 		case GAME_STATE_OPTION_FROM_PAUSED:
 		{
-			RenderGuiOptionFromPaused(viewPort, centerPos);
+			RenderGuiOptionFromPaused(imGuiViewPort, imGuiCenterPos);
 
-			return;
+			break;
 		}
 
 		case GAME_STATE_CHECK_EXIT_FROM_LOBBY_TO_WINDOWS:
 		{
-			RenderGuiCheckExitFromLobbyToWindows(viewPort, centerPos);
+			RenderGuiCheckExitFromLobbyToWindows(imGuiViewPort, imGuiCenterPos);
 
-			return;
+			break;
 		}
 
 		case GAME_STATE_CHECK_EXIT_FROM_PAUSED_TO_WINDOWS:
 		{
-			RenderGuiCheckExitFromPausedToWindows(viewPort, centerPos);
+			RenderGuiCheckExitFromPausedToWindows(imGuiViewPort, imGuiCenterPos);
 
-			return;
+			break;
 		}
 
 		case GAME_STATE_CHECK_EXIT_FROM_PAUSED_TO_LOBBY:
 		{
-			RenderGuiCheckExitFromPausedToLobby(viewPort, centerPos);
+			RenderGuiCheckExitFromPausedToLobby(imGuiViewPort, imGuiCenterPos);
 
-			return;
+			break;
 		}
 	}
 }
 
 void Sodo::UpdateSreen()
 {
-	//TODO : 커맨드 얼로케이터를 여러개 두어서 병렬성을 높이자
 	WaitAllCommandDone();
 
 	ThrowIfFailed(m_commandAllocator->Reset());
@@ -147,8 +146,6 @@ void Sodo::UpdateSreen()
 
 	ID3D12DescriptorHeap* descriptorHeaps[] = { m_descriptorHeapCBVSRVUAV.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-
-	//TODO : PSO, 루트 시그니처는 여기서 설정하자
 
 	CD3DX12_RESOURCE_BARRIER presentToRenderTarget = CD3DX12_RESOURCE_BARRIER::Transition(
 		m_backBuffers[m_currentBackBufferIndex].Get(),
@@ -163,6 +160,7 @@ void Sodo::UpdateSreen()
 	m_commandList->OMSetRenderTargets(1, &cpuHandleRTV, true, &m_cpuStartHandleDSV);
 	m_commandList->RSSetViewports(1, &m_viewPort);
 	m_commandList->RSSetScissorRects(1, &m_scissorRectangle);
+		
 
 	FLOAT sinZeroToOne = (XMScalarSin(static_cast<float>(m_totalTimer.GetTimeMilli()) / 1000) + 1) / 2;
 	FLOAT testColor[4] = { sinZeroToOne, sinZeroToOne, sinZeroToOne, 1.0f };
@@ -176,9 +174,13 @@ void Sodo::UpdateSreen()
 		nullptr
 	);
 
+	//TODO : HDR 활성화시 렌더 결과를 톤매핑하자
+
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_commandList.Get());
-	
+
+	//TODO : HDR 활성화시 imgui를 별도 SDR 포맷에 렌더하고서 HDR 기준으로 밝기를 변환 후 HDR 백버퍼에 합성하자
+
 	CD3DX12_RESOURCE_BARRIER renderTargetToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
 		m_backBuffers[m_currentBackBufferIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,

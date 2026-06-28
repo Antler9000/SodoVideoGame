@@ -1,10 +1,11 @@
 ﻿#include <windows.h>
-#include <d3d12sdklayers.h>
 #include <d3dx12_root_signature.h>
 #include <d3dx12_core.h>
 #include <d3d12.h>
 #include <d3dcommon.h>
 #include <dxgi1_6.h>
+#include <dxgi1_5.h>
+#include <dxgi1_4.h>
 #include <dxgi1_3.h>
 #include <dxgi1_2.h>
 #include <dxgi.h>
@@ -14,8 +15,6 @@
 #include <algorithm>
 #include <vector>
 #include <string>
-#include <cstdio>
-#include <cstdlib>
 #include <stdexcept>
 #include "imgui.h"
 #include "imgui_impl_win32.h"
@@ -38,7 +37,14 @@ void Sodo::InitFactory()
 
 	ThrowIfFailed(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(m_factory.ReleaseAndGetAddressOf())));
 
-	//TODO : m_optionTearing.featureSupported를 여기서 확인하자
+	//NOTE : 쿼리 출력 매개변수는 BOOL 타입이므로, bool 타입인 m_optionTearing.featureSupported를 매개변수로 사용하면 안 됨
+	BOOL tearingQuery = FALSE;
+	m_factory->CheckFeatureSupport(
+		DXGI_FEATURE_PRESENT_ALLOW_TEARING, 
+		&tearingQuery,
+		sizeof(tearingQuery)
+	);
+	m_optionTearing.featureSupported = tearingQuery;
 }
 
 void Sodo::InitAdapter()
@@ -76,7 +82,7 @@ void Sodo::InitOutput()
 
 	if (m_optionHDR.outputSupported == true)
 	{
-		//TODO : m_outputDesc를 여기서 얻어내자
+		m_output6->GetDesc1(&m_outputDesc);
 	}
 
 #ifdef _DEBUG
@@ -169,20 +175,61 @@ void Sodo::InitDevice()
 		D3D12CreateDevice(m_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(m_device.ReleaseAndGetAddressOf()))
 	);
 
-	//TODO : m_backBufferFormatSDR를 지원하는지 여부를 여기서 확인하고, 지원하지 않을 시 ThrowIfFailed로 종료하자
-	//TODO : m_optionHDR.formatSupported를 여기서 확인하자
-
 	m_optionMeshShader.deviceSupported = SUCCEEDED(m_device.As(&m_device2));
 	m_optionRayTracing.deviceSupported = SUCCEEDED(m_device.As(&m_device5));
 
 	if (m_optionMeshShader.deviceSupported == true)
-	{
-		//TODO :m_optionMeshShader.featureSupported를 여기서 확인하자
+	{	
+		D3D12_FEATURE_DATA_D3D12_OPTIONS7 meshShaderFeatureQuery = {};
+		m_device2->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &meshShaderFeatureQuery, sizeof(meshShaderFeatureQuery));
+		m_optionMeshShader.featureSupported = (meshShaderFeatureQuery.MeshShaderTier != D3D12_MESH_SHADER_TIER_NOT_SUPPORTED);
 	}
 	if (m_optionRayTracing.deviceSupported == true)
 	{
-		//TODO : m_optionRayTracing.featureSupported를 여기서 확인하자
+		D3D12_FEATURE_DATA_D3D12_OPTIONS5 rayTracingFeatureQuery = {};
+		m_device5->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &rayTracingFeatureQuery, sizeof(rayTracingFeatureQuery));
+		m_optionRayTracing.featureSupported = (rayTracingFeatureQuery.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED);
 	}
+}
+
+void Sodo::InitFormatSupport()
+{
+	D3D12_FEATURE_DATA_FORMAT_SUPPORT backBufferFormatSDRQuery = {
+		m_backBufferFormatSDR,
+		D3D12_FORMAT_SUPPORT1_NONE,
+		D3D12_FORMAT_SUPPORT2_NONE
+	};
+	D3D12_FEATURE_DATA_FORMAT_SUPPORT backBufferFormatHDRQuery = {
+		m_backBufferFormatHDR,
+		D3D12_FORMAT_SUPPORT1_NONE,
+		D3D12_FORMAT_SUPPORT2_NONE
+	};
+	D3D12_FEATURE_DATA_FORMAT_SUPPORT depthStencilFormatQuery = {
+		m_depthStencilBufferFormat,
+		D3D12_FORMAT_SUPPORT1_NONE,
+		D3D12_FORMAT_SUPPORT2_NONE
+	};
+
+	ThrowIfFailed(
+		m_device->CheckFeatureSupport(
+			D3D12_FEATURE_FORMAT_SUPPORT, &backBufferFormatSDRQuery, sizeof(backBufferFormatSDRQuery)
+		)
+	);
+	HRESULT hdrQueryResult = m_device->CheckFeatureSupport(
+		D3D12_FEATURE_FORMAT_SUPPORT, &backBufferFormatHDRQuery, sizeof(backBufferFormatHDRQuery)
+	);
+	ThrowIfFailed(
+		m_device->CheckFeatureSupport(
+			D3D12_FEATURE_FORMAT_SUPPORT, &depthStencilFormatQuery, sizeof(depthStencilFormatQuery)
+		)
+	);
+
+	ThrowIfFalse(backBufferFormatSDRQuery.Support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET);
+	if (SUCCEEDED(hdrQueryResult))
+	{
+		m_optionHDR.formatSupported = ((backBufferFormatHDRQuery.Support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET) != 0);
+	}
+	ThrowIfFalse(depthStencilFormatQuery.Support1 & D3D12_FORMAT_SUPPORT1_DEPTH_STENCIL);
 }
 
 void Sodo::InitFence()
@@ -234,49 +281,9 @@ void Sodo::InitCommandList()
 	m_commandList->Close();
 }
 
-void Sodo::InitSDRSwapChain()
+void Sodo::InitHDRSwapChainSupport()
 {
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc	= {};
-	swapChainDesc.Width					= 0;
-	swapChainDesc.Height				= 0;
-	swapChainDesc.Format				= m_backBufferFormatSDR;
-	swapChainDesc.Stereo				= false;
-	swapChainDesc.SampleDesc.Count		= 1;
-	swapChainDesc.SampleDesc.Quality	= 0;
-	swapChainDesc.BufferUsage			= DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.BufferCount			= m_backBufferCount;
-	swapChainDesc.Scaling				= DXGI_SCALING_STRETCH;
-	swapChainDesc.SwapEffect			= DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapChainDesc.AlphaMode				= DXGI_ALPHA_MODE_UNSPECIFIED;
-	swapChainDesc.Flags					= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
-										| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
-
-	ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
-
-	ThrowIfFailed(
-		m_factory->CreateSwapChainForHwnd(
-			m_commandQueue.Get(),
-			m_hWnd,
-			&swapChainDesc,
-			nullptr,
-			nullptr,
-			tempSwapChain.ReleaseAndGetAddressOf()
-		)
-	);
-
-	ThrowIfFailed((tempSwapChain.As(&m_swapChain)));
-
-	//TODO : m_optionHDR.colorSpaceSupported를 여기서 확인하자
-}
-
-void Sodo::InitHDRSwapChain()
-{
-	if (m_optionHDR.IsActive() == false)
-	{
-		return;
-	}
-
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 	swapChainDesc.Width					= 0;
 	swapChainDesc.Height				= 0;
 	swapChainDesc.Format				= m_backBufferFormatHDR;
@@ -304,9 +311,60 @@ void Sodo::InitHDRSwapChain()
 		)
 	);
 
+	ComPtr<IDXGISwapChain3> tempSwapChain3 = nullptr;
+
+	ThrowIfFailed((tempSwapChain.As(&tempSwapChain3)));
+
+	UINT colorSpaceHDRQuery = 0;
+	HRESULT queryResult = tempSwapChain3->CheckColorSpaceSupport(m_backBufferColorSpaceHDR, &colorSpaceHDRQuery);
+	if (SUCCEEDED(queryResult))
+	{
+		m_optionHDR.colorSpaceSupported = ((colorSpaceHDRQuery & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) != 0);
+	}
+}
+
+void Sodo::InitSwapChain()
+{
+	m_swapChain.Reset();
+
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+	swapChainDesc.Width					= 0;
+	swapChainDesc.Height				= 0;
+	swapChainDesc.Format				= m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR;
+	swapChainDesc.Stereo				= false;
+	swapChainDesc.SampleDesc.Count		= 1;
+	swapChainDesc.SampleDesc.Quality	= 0;
+	swapChainDesc.BufferUsage			= DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.BufferCount			= m_backBufferCount;
+	swapChainDesc.Scaling				= DXGI_SCALING_STRETCH;
+	swapChainDesc.SwapEffect			= DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapChainDesc.AlphaMode				= DXGI_ALPHA_MODE_UNSPECIFIED;
+	swapChainDesc.Flags					= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
+										| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+
+	ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
+
+	ThrowIfFailed(
+		m_factory->CreateSwapChainForHwnd(
+			m_commandQueue.Get(),
+			m_hWnd,
+			&swapChainDesc,
+			nullptr,
+			nullptr,
+			tempSwapChain.ReleaseAndGetAddressOf()
+		)
+	);
+
 	ThrowIfFailed(tempSwapChain.As(&m_swapChain));
 
-	//TODO : 여기서 스왑체인에 m_backBufferColorSpaceHDR을 설정하자
+	if (m_optionHDR.IsActive() == true)
+	{
+		m_swapChain->SetColorSpace1(m_backBufferColorSpaceHDR);
+	}
+	else
+	{
+		m_swapChain->SetColorSpace1(m_backBufferColorSpaceSDR);
+	}
 }
 
 void Sodo::InitBackBuffers()
@@ -465,6 +523,8 @@ void Sodo::InitCBVSRVUAV()
 
 void Sodo::InitFenceEvent()
 {
+	CloseFenceEvent();
+
 	m_fenceEvent = CreateEventExW(
 		nullptr,
 		nullptr,
@@ -477,22 +537,28 @@ void Sodo::InitFenceEvent()
 
 void Sodo::InitImGui()
 {
+	if (m_imGuiInitialized == true)
+	{
+		CloseImGui();
+		m_imGuiDescriptorHeapAllocator.Destroy();
+	}
+
 	m_imGuiDescriptorHeapAllocator.Create(m_device.Get(), m_descriptorHeapCBVSRVUAV.Get(), m_imGuiDescriptorHeapCapacity);
 
-	ImGui_ImplDX12_InitInfo init_info = {};
-	init_info.Device = m_device.Get();
-	init_info.CommandQueue = m_commandQueue.Get();
-	init_info.NumFramesInFlight = 1;
-	init_info.RTVFormat = m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR;
+	ImGui_ImplDX12_InitInfo initInfo = {};
+	initInfo.Device = m_device.Get();
+	initInfo.CommandQueue = m_commandQueue.Get();
+	initInfo.NumFramesInFlight = 1;
+	initInfo.RTVFormat = m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR;
 
-	init_info.SrvDescriptorHeap = m_descriptorHeapCBVSRVUAV.Get();
-	init_info.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) { return m_imGuiDescriptorHeapAllocator.Alloc(out_cpu_handle, out_gpu_handle); };
-	init_info.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle) { return m_imGuiDescriptorHeapAllocator.Free(cpu_handle, gpu_handle); };
+	initInfo.SrvDescriptorHeap = m_descriptorHeapCBVSRVUAV.Get();
+	initInfo.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) { return m_imGuiDescriptorHeapAllocator.Alloc(out_cpu_handle, out_gpu_handle); };
+	initInfo.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle) { return m_imGuiDescriptorHeapAllocator.Free(cpu_handle, gpu_handle); };
 	
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui_ImplWin32_Init(m_hWnd);
-	ImGui_ImplDX12_Init(&init_info);
+	ImGui_ImplDX12_Init(&initInfo);
 
 	ImGui::StyleColorsClassic();
 
@@ -520,6 +586,8 @@ void Sodo::InitImGui()
 	colors[ImGuiCol_Separator]			= ImVec4(0.34f, 0.31f, 0.25f, 0.65f);
 	colors[ImGuiCol_SeparatorHovered]	= ImVec4(0.45f, 0.38f, 0.34f, 0.78f);
 	colors[ImGuiCol_SeparatorActive]	= ImVec4(0.55f, 0.45f, 0.43f, 0.90f);
+
+	m_imGuiInitialized = true;
 }
 
 void Sodo::InitTimer()
