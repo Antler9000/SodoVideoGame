@@ -27,6 +27,7 @@ void Sodo::UpdateTimers()
 
 void Sodo::UpdateCaption()
 {
+#ifdef _DEBUG
 	m_captionTimer.Update();
 
 	//NOTE : SetWindowTextW를 너무 자주 호출하면 시스템 부하로 인해 윈도우 전체가 먹통이 되니 반복에 텀을 주자
@@ -52,6 +53,7 @@ void Sodo::UpdateCaption()
 
 		m_captionTimer.Mark();
 	}
+#endif
 }
 
 void Sodo::UpdateImGui()
@@ -174,12 +176,8 @@ void Sodo::UpdateSreen()
 		nullptr
 	);
 
-	//TODO : HDR 활성화시 렌더 결과를 톤매핑하자
-
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_commandList.Get());
-
-	//TODO : HDR 활성화시 imgui를 별도 SDR 포맷에 렌더하고서 HDR 기준으로 밝기를 변환 후 HDR 백버퍼에 합성하자
 
 	CD3DX12_RESOURCE_BARRIER renderTargetToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
 		m_backBuffers[m_currentBackBufferIndex].Get(),
@@ -192,7 +190,7 @@ void Sodo::UpdateSreen()
 	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 
-	if (m_optionTearing.IsActive() == true)
+	if (m_optionTearing.IsActive())
 	{
 		ThrowIfFailed(m_swapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING));
 	}

@@ -88,9 +88,6 @@ public:
 		);
 
 		ThrowIfNull(m_hWnd);
-
-		ShowWindow(m_hWnd, show);
-		UpdateWindow(m_hWnd);
 	}
 
 protected:

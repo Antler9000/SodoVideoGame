@@ -26,15 +26,15 @@ void Sodo::WaitAllCommandDone()
 
 void Sodo::ResetScreenSetting()
 {
-	if (m_needResetFullScreen == true)
+	if (m_needResetScreenMode)
 	{
-		if (m_optionFullScreen.userEnabled == true)
+		if (m_optionFullScreen.userEnabled)
 		{
-			SetBorderlessFullScreenMode();
+			SetFullScreenMode();
 		}
 		else
 		{
-			SetToWindowedMode();
+			SetWindowMode();
 		}
 	}
 
@@ -58,7 +58,7 @@ void Sodo::ResetScreenSetting()
 			)
 		);
 
-		if (m_optionHDR.IsActive() == true)
+		if (m_optionHDR.IsActive())
 		{
 			m_swapChain->SetColorSpace1(m_backBufferColorSpaceHDR);
 		}
@@ -77,15 +77,65 @@ void Sodo::ResetScreenSetting()
 	}
 
 	m_needResetHDR = false;
-	m_needResetFullScreen = false;
+	m_needResetScreenMode = false;
 }
 
-void Sodo::SetBorderlessFullScreenMode()
+void Sodo::SetFullScreenMode()
 {
-	//TODO : 작성하자
+	SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+
+	HMONITOR monitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+	MONITORINFO monitorInfo{};
+	monitorInfo.cbSize = sizeof(MONITORINFO);
+	GetMonitorInfo(monitor, &monitorInfo);
+
+	LONG monitorXBase = monitorInfo.rcMonitor.left;
+	LONG monitorYBase = monitorInfo.rcMonitor.top;
+	LONG monitorWidth = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+	LONG monitorHeight = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+
+	SetWindowPos(
+		m_hWnd,
+		HWND_TOP,
+		monitorXBase,
+		monitorYBase,
+		monitorWidth,
+		monitorHeight,
+		SWP_NOOWNERZORDER | SWP_FRAMECHANGED
+	);
 }
 
-void Sodo::SetToWindowedMode()
+void Sodo::SetWindowMode()
 {
-	//TODO : 작성하자
+	SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
+
+	HMONITOR monitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+	MONITORINFO monitorInfo{};
+	monitorInfo.cbSize = sizeof(MONITORINFO);
+	GetMonitorInfo(monitor, &monitorInfo);
+
+	LONG monitorXBase = monitorInfo.rcMonitor.left;
+	LONG monitorYBase = monitorInfo.rcMonitor.top;
+	LONG monitorWidth = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+	LONG monitorHeight = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+
+	LONG windowWidth = monitorWidth * 2 / 3;
+	LONG windowHeight = monitorHeight * 2 / 3;
+	LONG windowXBase = monitorXBase + (monitorWidth / 2) - (windowWidth / 2);
+	LONG windowYBase = monitorYBase + (monitorHeight / 2) - (windowHeight / 2);
+
+	SetWindowPos(
+		m_hWnd,
+		HWND_TOP,
+		windowXBase,
+		windowYBase,
+		windowWidth,
+		windowHeight,
+		SWP_NOOWNERZORDER | SWP_FRAMECHANGED
+	);
+}
+
+void Sodo::SaveOptions()
+{
+	
 }

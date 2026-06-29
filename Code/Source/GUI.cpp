@@ -125,7 +125,6 @@ void Sodo::RenderGuiLoadingToGame(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCent
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	//TODO : 버튼을 비활성화하고, 로딩이 다 되면 활성화하기
 	if (ImGui::Button("Click here to start", m_imguiLargeButtonSize))
 	{
 		m_gameMode = GAME_STATE_IN_GAME;
@@ -150,7 +149,6 @@ void Sodo::RenderGuiLoadingToLobby(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCen
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	//TODO : 로비로의 로딩은 완료되면 버튼 없이 자동으로 수행되도록 하기
 	if (ImGui::Button("Click here to end", m_imguiLargeButtonSize))
 	{
 		m_gameMode = GAME_STATE_LOBBY;
@@ -245,6 +243,10 @@ void Sodo::CommonRenderGuiOption()
 {
 	bool previousFullScreenState = m_optionFullScreen.IsActive();
 	bool previousHDRState = m_optionHDR.IsActive();
+	bool previousTearingState = m_optionTearing.IsActive();
+	bool previousRayTracingState = m_optionRayTracing.IsActive();
+	bool previousMeshShaderState = m_optionMeshShader.IsActive();
+	OptionSound previousSoundState = m_optionSound;
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 
@@ -274,21 +276,49 @@ void Sodo::CommonRenderGuiOption()
 
 	ImGui::Text("Sound");
 	ImGui::Checkbox("Master", &m_optionSound.userEnabled);
-	ImGui::SliderFloat("Main Volume", &m_optionSound.mainVolume, 0.0f, 100.0f, "%.0f%%");
-	ImGui::SliderFloat("UI Volume", &m_optionSound.uiVolume, 0.0f, 100.0f, "%.0f%%");
-	ImGui::SliderFloat("Effect Volume", &m_optionSound.effectVolume, 0.0f, 100.0f, "%.0f%%");
-	ImGui::SliderFloat("Music Volume", &m_optionSound.musicVolume, 0.0f, 100.0f, "%.0f%%");
+	ImGui::SliderInt("Main Volume", &m_optionSound.mainVolume, 0.0f, 100.0f, "%d%%");
+	ImGui::SliderInt("UI Volume", &m_optionSound.uiVolume, 0.0f, 100.0f, "%d%%");
+	ImGui::SliderInt("Effect Volume", &m_optionSound.effectVolume, 0.0f, 100.0f, "%d%%");
+	ImGui::SliderInt("Music Volume", &m_optionSound.musicVolume, 0.0f, 100.0f, "%d%%");
 
 	bool nowFullScreenState = m_optionFullScreen.IsActive();
 	bool nowHDRState = m_optionHDR.IsActive();
+	bool nowTearingState = m_optionTearing.IsActive();
+	bool nowRayTracingState = m_optionRayTracing.IsActive();
+	bool nowMeshShaderState = m_optionMeshShader.IsActive();
+	OptionSound nowSoundState = m_optionSound;
 
+	bool needSaveOptions = false;
 	if (previousFullScreenState != nowFullScreenState)
 	{
-		m_needResetFullScreen = true;
+		m_needResetScreenMode = true;
+		needSaveOptions = true;
 	}
 	if (previousHDRState != nowHDRState)
 	{
 		m_needResetHDR = true;
+		needSaveOptions = true;
+	}
+	if (previousTearingState != nowTearingState)
+	{
+		needSaveOptions = true;
+	}
+	if (previousRayTracingState != nowRayTracingState)
+	{
+		needSaveOptions = true;
+	}
+	if (previousMeshShaderState != nowMeshShaderState)
+	{
+		needSaveOptions = true;
+	}
+	if (previousSoundState != nowSoundState)
+	{
+		needSaveOptions = true;
+	}
+
+	if (needSaveOptions)
+	{
+		SaveOptions();
 	}
 }
 

@@ -38,6 +38,8 @@ public:
 
 	void InitApp()
 	{
+		InitSavedOptions();
+		InitScreenMode();
 		InitFactory();
 		InitAdapter();
 		InitOutput();
@@ -83,13 +85,13 @@ public:
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 			}
-			else if (m_needResetHDR || m_needResetFullScreen)
+			else if (m_needResetScreenMode || m_needResetHDR)
 			{
 				ResetScreenSetting();
 			}
 			else
 			{
-				if (IsStopped() == true)
+				if (IsStopped())
 				{
 					Sleep(100);
 				}
@@ -111,6 +113,8 @@ private:
 	void CloseFenceEvent();
 	void CloseImGui();
 
+	void InitSavedOptions();
+	void InitScreenMode();
 	void InitFactory();
 	void InitAdapter();
 	void InitOutput();
@@ -158,8 +162,9 @@ private:
 
 	void WaitAllCommandDone();
 	void ResetScreenSetting();
-	void SetBorderlessFullScreenMode();
-	void SetToWindowedMode();
+	void SetFullScreenMode();
+	void SetWindowMode();
+	void SaveOptions();
 
 	void RenderGuiInGame(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
 	void RenderGuiLobbyMenu(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
@@ -188,7 +193,6 @@ public:
 	static inline ImGuiDescriptorHeapAllocator m_imGuiDescriptorHeapAllocator = {};
 
 private:
-	//TODO : HDR을 (DXGI_FORMAT_R10G10B10A2_UNORM, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020)으로 바꿀지 결정하자
 	static constexpr UINT m_backBufferCount								= 2;
 	static constexpr DXGI_FORMAT m_backBufferFormatSDR					= DXGI_FORMAT_R8G8B8A8_UNORM;
 	static constexpr DXGI_FORMAT m_backBufferFormatHDR					= DXGI_FORMAT_R16G16B16A16_FLOAT;
@@ -237,8 +241,8 @@ private:
 	UINT				m_backBufferWidth			= 0;
 	UINT				m_backBufferHeight			= 0;
 	float				m_backBufferAspectRatio		= 0.0f;
+	bool				m_needResetScreenMode		= false;
 	bool				m_needResetHDR				= false;
-	bool				m_needResetFullScreen		= false;
 	D3D12_VIEWPORT		m_viewPort					= {};
 	D3D12_RECT			m_scissorRectangle			= {};
 	UINT				m_countCBV					= 0;
@@ -258,7 +262,7 @@ private:
 	bool m_isResizing = false;
 	bool m_isInActive = false;
 	void ResetTimers() { m_totalTimer.Reset(); m_captionTimer.Reset(); m_frameTimer.Reset(); }
-	void StopTimers() { if (IsStopped() == true) { m_totalTimer.Stop(); m_captionTimer.Stop(); m_frameTimer.Stop(); } }
+	void StopTimers() { if (IsStopped()) { m_totalTimer.Stop(); m_captionTimer.Stop(); m_frameTimer.Stop(); } }
 	void StartTimers() { if (IsStopped() == false) { m_totalTimer.Start(); m_captionTimer.Start(); m_frameTimer.Start(); } }
 	Timer m_totalTimer;
 	Timer m_captionTimer;
@@ -268,7 +272,7 @@ private:
 
 	POINT m_mousePositionClient		= { 0, 0 };
 	POINT m_clickedPositionClient	= { 0, 0 };
-	bool m_bClicked					= false;
+	bool m_isClicked				= false;
 	int m_scrollDelta				= 0;
 
 	bool m_imGuiInitialized = false;

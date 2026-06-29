@@ -27,6 +27,23 @@
 using Microsoft::WRL::ComPtr;
 using std::wstring;
 
+void Sodo::InitSavedOptions()
+{
+
+}
+
+void Sodo::InitScreenMode()
+{
+	if(m_optionFullScreen.IsActive())
+	{
+		SetFullScreenMode();
+	}
+	else
+	{
+		SetWindowMode();
+	}
+}
+
 void Sodo::InitFactory()
 {
 	UINT factoryFlags = 0;
@@ -49,7 +66,6 @@ void Sodo::InitFactory()
 
 void Sodo::InitAdapter()
 {
-	//NOTE : 간단히 구현하기 위해, 가장 성능이 높은 GPU 하나로 adapter 인터페이스를 생성 시도함
 	ThrowIfFailed(
 		m_factory->EnumAdapterByGpuPreference(
 			0,
@@ -75,12 +91,11 @@ void Sodo::InitOutput()
 	m_output.Reset();
 	m_output6.Reset();
 
-	//NOTE : 간단히 구현하기 위해, 현재 주 디스플레이로 output 인터페이스를 생성 시도함
 	ThrowIfFailed(m_adapter->EnumOutputs(0, m_output.ReleaseAndGetAddressOf()));
 
 	m_optionHDR.outputSupported = SUCCEEDED(m_output.As(&m_output6));
 
-	if (m_optionHDR.outputSupported == true)
+	if (m_optionHDR.outputSupported)
 	{
 		m_output6->GetDesc1(&m_outputDesc);
 	}
@@ -110,7 +125,6 @@ void Sodo::InitDisplayMode()
 	std::vector<DXGI_MODE_DESC> modeList(modeCount);
 	ThrowIfFailed(m_output->GetDisplayModeList(m_backBufferFormatSDR, 0, &modeCount, &modeList[0]));
 
-	//NOTE : 간단히 구현하기 위해, 가장 크고 주사율이 높은 디스플레이 모드를 멤버 변수에 저장함
 	m_displayModeDesc = *std::max_element(
 		modeList.begin(),
 		modeList.end(),
@@ -178,13 +192,13 @@ void Sodo::InitDevice()
 	m_optionMeshShader.deviceSupported = SUCCEEDED(m_device.As(&m_device2));
 	m_optionRayTracing.deviceSupported = SUCCEEDED(m_device.As(&m_device5));
 
-	if (m_optionMeshShader.deviceSupported == true)
+	if (m_optionMeshShader.deviceSupported)
 	{	
 		D3D12_FEATURE_DATA_D3D12_OPTIONS7 meshShaderFeatureQuery = {};
 		m_device2->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &meshShaderFeatureQuery, sizeof(meshShaderFeatureQuery));
 		m_optionMeshShader.featureSupported = (meshShaderFeatureQuery.MeshShaderTier != D3D12_MESH_SHADER_TIER_NOT_SUPPORTED);
 	}
-	if (m_optionRayTracing.deviceSupported == true)
+	if (m_optionRayTracing.deviceSupported)
 	{
 		D3D12_FEATURE_DATA_D3D12_OPTIONS5 rayTracingFeatureQuery = {};
 		m_device5->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &rayTracingFeatureQuery, sizeof(rayTracingFeatureQuery));
@@ -283,6 +297,8 @@ void Sodo::InitCommandList()
 
 void Sodo::InitHDRSwapChainSupport()
 {
+	m_swapChain.Reset();
+
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc	= {};
 	swapChainDesc.Width					= 0;
 	swapChainDesc.Height				= 0;
@@ -357,7 +373,7 @@ void Sodo::InitSwapChain()
 
 	ThrowIfFailed(tempSwapChain.As(&m_swapChain));
 
-	if (m_optionHDR.IsActive() == true)
+	if (m_optionHDR.IsActive())
 	{
 		m_swapChain->SetColorSpace1(m_backBufferColorSpaceHDR);
 	}
@@ -537,7 +553,7 @@ void Sodo::InitFenceEvent()
 
 void Sodo::InitImGui()
 {
-	if (m_imGuiInitialized == true)
+	if (m_imGuiInitialized)
 	{
 		CloseImGui();
 		m_imGuiDescriptorHeapAllocator.Destroy();
@@ -563,8 +579,8 @@ void Sodo::InitImGui()
 	ImGui::StyleColorsClassic();
 
 	ImGuiStyle& style = ImGui::GetStyle();	
-	style.ScaleAllSizes(2.0f);
-	style.FontScaleDpi = 2.0f;
+	style.ScaleAllSizes(m_imGuiScale);
+	style.FontScaleDpi = m_imGuiScale;
 
 	ImVec4* colors = style.Colors;
 	colors[ImGuiCol_Text]				= ImVec4(0.78f, 0.74f, 0.63f, 1.0f);

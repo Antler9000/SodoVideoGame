@@ -33,7 +33,7 @@ public:
 
 	void Stop()
 	{
-		if (m_isStopped == true)
+		if (m_isStopped)
 		{
 			return;
 		}

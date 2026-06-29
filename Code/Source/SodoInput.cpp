@@ -138,7 +138,7 @@ LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		//NOTE : 최대화 버튼을 누르는 경우를 처리함
 		case WM_SIZE:
 		{
-			if (m_isResizing == true)
+			if (m_isResizing)
 			{
 				return 0;
 			}
@@ -194,14 +194,14 @@ void Sodo::InputMouseMove(WPARAM wParam, LPARAM lParam)
 
 void Sodo::InputMouseLeftButtonDown(WPARAM wParam, LPARAM lParam)
 {
-	if (m_bClicked == true)
+	if (m_isClicked)
 	{
 		return;
 	}
 
 	m_clickedPositionClient.x = GET_X_LPARAM(lParam);
 	m_clickedPositionClient.y = GET_Y_LPARAM(lParam);
-	m_bClicked = true;
+	m_isClicked = true;
 }
 
 void Sodo::InputMouseLeftButtonUp(WPARAM wParam, LPARAM lParam)
@@ -223,19 +223,19 @@ void Sodo::InputMouseLeftButtonUp(WPARAM wParam, LPARAM lParam)
 	bool isDrag = (mouseManhattanDist > m_dragThresholdDist);
 	MessageBoxW(m_hWnd, messageBuffer, isDrag ? L"좌측 마우스 드래그" : L"좌측 마우스 클릭", MB_OK);
 
-	m_bClicked = false;
+	m_isClicked = false;
 }
 
 void Sodo::InputMouseRightButtonDown(WPARAM wParam, LPARAM lParam)
 {
-	if (m_bClicked == true)
+	if (m_isClicked)
 	{
 		return;
 	}
 
 	m_clickedPositionClient.x = GET_X_LPARAM(lParam);
 	m_clickedPositionClient.y = GET_Y_LPARAM(lParam);
-	m_bClicked = true;
+	m_isClicked = true;
 }
 
 void Sodo::InputMouseRightButtonUp(WPARAM wParam, LPARAM lParam)
@@ -256,20 +256,20 @@ void Sodo::InputMouseRightButtonUp(WPARAM wParam, LPARAM lParam)
 	bool isDragging = (mouseManhattanDist > m_dragThresholdDist);
 	MessageBoxW(m_hWnd, messageBuffer, isDragging ? L"우측 마우스 드래그" : L"우측 마우스 클릭", MB_OK);
 
-	m_bClicked = false;
+	m_isClicked = false;
 
 }
 
 void Sodo::InputMouseMiddleButtonDown(WPARAM wParam, LPARAM lParam)
 {
-	if (m_bClicked == true)
+	if (m_isClicked)
 	{
 		return;
 	}
 
 	m_clickedPositionClient.x = GET_X_LPARAM(lParam);
 	m_clickedPositionClient.y = GET_Y_LPARAM(lParam);
-	m_bClicked = true;
+	m_isClicked = true;
 }
 void Sodo::InputMouseMiddleButtonUp(WPARAM wParam, LPARAM lParam)
 {
@@ -288,7 +288,7 @@ void Sodo::InputMouseMiddleButtonUp(WPARAM wParam, LPARAM lParam)
 	bool isDrag = (mouseManhattanDist > m_dragThresholdDist);
 	MessageBoxW(m_hWnd, messageBuffer, isDrag ? L"중간 마우스 드래그" : L"중간 마우스 클릭", MB_OK);
 
-	m_bClicked = false;
+	m_isClicked = false;
 }
 
 void Sodo::InputMouseWheelScroll(WPARAM wParam, LPARAM lParam)
