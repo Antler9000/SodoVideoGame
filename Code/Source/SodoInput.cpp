@@ -11,7 +11,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 //			되도록 이 안에서는 짧은 로직만 수행하도록 하고, 긴 대기가 필요한 로직은 별도 스레드로 처리하자
 LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (ImGui_ImplWin32_WndProcHandler(m_hWnd, uMsg, wParam, lParam))
+	LRESULT imGuiHandled = ImGui_ImplWin32_WndProcHandler(m_hWnd, uMsg, wParam, lParam);
+	if (imGuiHandled == true)
 	{
 		return 0;
 	}
@@ -119,7 +120,7 @@ LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_ENTERSIZEMOVE:
 		{
 			m_isResizing = true;
-			StopTimers();
+			TimersStop();
 
 			return 0;
 		}
@@ -130,7 +131,7 @@ LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ResetScreenSetting();
 
 			m_isResizing = false;
-			StartTimers();
+			TimersStart();
 
 			return 0;
 		}
@@ -138,7 +139,7 @@ LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		//NOTE : 최대화 버튼을 누르는 경우를 처리함
 		case WM_SIZE:
 		{
-			if (m_isResizing)
+			if (m_isResizing == true)
 			{
 				return 0;
 			}
@@ -153,12 +154,12 @@ LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (LOWORD(wParam) == WA_INACTIVE)
 			{
 				m_isInActive = true;
-				StopTimers();
+				TimersStop();
 			}
 			else
 			{
 				m_isInActive = false;
-				StartTimers();
+				TimersStart();
 			}
 
 			return 0;
@@ -167,7 +168,8 @@ LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		//NOTE : ALT+F4 혹은 우상단 창닫기 버튼을 이용한 종료를 처리함
 		case WM_CLOSE:
 		{
-			if (MessageBoxW(m_hWnd, L"어플리케이션을 종료합니까?", L"종료 문구", MB_OKCANCEL) == IDOK)
+			int result = MessageBoxW(m_hWnd, L"어플리케이션을 종료합니까?", L"종료 문구", MB_OKCANCEL);
+			if (result == IDOK)
 			{
 				DestroyWindow(m_hWnd);
 			}
@@ -188,20 +190,20 @@ LRESULT Sodo::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void Sodo::InputMouseMove(WPARAM wParam, LPARAM lParam)
 {
-	m_mousePositionClient.x = GET_X_LPARAM(lParam);
-	m_mousePositionClient.y = GET_Y_LPARAM(lParam);
+	m_inputMousePositionClient.x = GET_X_LPARAM(lParam);
+	m_inputMousePositionClient.y = GET_Y_LPARAM(lParam);
 }
 
 void Sodo::InputMouseLeftButtonDown(WPARAM wParam, LPARAM lParam)
 {
-	if (m_isClicked)
+	if (m_inputIsClicked == true)
 	{
 		return;
 	}
 
-	m_clickedPositionClient.x = GET_X_LPARAM(lParam);
-	m_clickedPositionClient.y = GET_Y_LPARAM(lParam);
-	m_isClicked = true;
+	m_inputMouseClickedPositionClient.x = GET_X_LPARAM(lParam);
+	m_inputMouseClickedPositionClient.y = GET_Y_LPARAM(lParam);
+	m_inputIsClicked = true;
 }
 
 void Sodo::InputMouseLeftButtonUp(WPARAM wParam, LPARAM lParam)
@@ -213,29 +215,29 @@ void Sodo::InputMouseLeftButtonUp(WPARAM wParam, LPARAM lParam)
 		L"%s%s 시작 (x, y) = (%d, %d) \n 끝 (x, y) = (%d, %d)",
 		wParam & MK_CONTROL ? L"[CTRL]" : L"",
 		wParam & MK_SHIFT ? L"[SHIFT]" : L"",
-		m_clickedPositionClient.x,
-		m_clickedPositionClient.y,
+		m_inputMouseClickedPositionClient.x,
+		m_inputMouseClickedPositionClient.y,
 		GET_X_LPARAM(lParam),
 		GET_Y_LPARAM(lParam)
 	);
 
-	UINT mouseManhattanDist = abs(GET_X_LPARAM(lParam) - m_clickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_clickedPositionClient.y);
-	bool isDrag = (mouseManhattanDist > m_dragThresholdDist);
+	UINT mouseMovedManhattanDist = abs(GET_X_LPARAM(lParam) - m_inputMouseClickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_inputMouseClickedPositionClient.y);
+	bool isDrag = (mouseMovedManhattanDist > m_inputDragThresholdDist);
 	MessageBoxW(m_hWnd, messageBuffer, isDrag ? L"좌측 마우스 드래그" : L"좌측 마우스 클릭", MB_OK);
 
-	m_isClicked = false;
+	m_inputIsClicked = false;
 }
 
 void Sodo::InputMouseRightButtonDown(WPARAM wParam, LPARAM lParam)
 {
-	if (m_isClicked)
+	if (m_inputIsClicked == true)
 	{
 		return;
 	}
 
-	m_clickedPositionClient.x = GET_X_LPARAM(lParam);
-	m_clickedPositionClient.y = GET_Y_LPARAM(lParam);
-	m_isClicked = true;
+	m_inputMouseClickedPositionClient.x = GET_X_LPARAM(lParam);
+	m_inputMouseClickedPositionClient.y = GET_Y_LPARAM(lParam);
+	m_inputIsClicked = true;
 }
 
 void Sodo::InputMouseRightButtonUp(WPARAM wParam, LPARAM lParam)
@@ -246,30 +248,30 @@ void Sodo::InputMouseRightButtonUp(WPARAM wParam, LPARAM lParam)
 		_countof(messageBuffer),
 		L"%s 시작 (x, y) = (%d, %d) \n 끝 (x, y) = (%d, %d)",
 		wParam & MK_SHIFT ? L"[SHIFT]" : L"",
-		m_clickedPositionClient.x,
-		m_clickedPositionClient.y,
+		m_inputMouseClickedPositionClient.x,
+		m_inputMouseClickedPositionClient.y,
 		GET_X_LPARAM(lParam),
 		GET_Y_LPARAM(lParam)
 	);
 
-	UINT mouseManhattanDist = abs(GET_X_LPARAM(lParam) - m_clickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_clickedPositionClient.y);
-	bool isDragging = (mouseManhattanDist > m_dragThresholdDist);
+	UINT mouseMovedManhattanDist = abs(GET_X_LPARAM(lParam) - m_inputMouseClickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_inputMouseClickedPositionClient.y);
+	bool isDragging = (mouseMovedManhattanDist > m_inputDragThresholdDist);
 	MessageBoxW(m_hWnd, messageBuffer, isDragging ? L"우측 마우스 드래그" : L"우측 마우스 클릭", MB_OK);
 
-	m_isClicked = false;
+	m_inputIsClicked = false;
 
 }
 
 void Sodo::InputMouseMiddleButtonDown(WPARAM wParam, LPARAM lParam)
 {
-	if (m_isClicked)
+	if (m_inputIsClicked == true)
 	{
 		return;
 	}
 
-	m_clickedPositionClient.x = GET_X_LPARAM(lParam);
-	m_clickedPositionClient.y = GET_Y_LPARAM(lParam);
-	m_isClicked = true;
+	m_inputMouseClickedPositionClient.x = GET_X_LPARAM(lParam);
+	m_inputMouseClickedPositionClient.y = GET_Y_LPARAM(lParam);
+	m_inputIsClicked = true;
 }
 void Sodo::InputMouseMiddleButtonUp(WPARAM wParam, LPARAM lParam)
 {
@@ -278,22 +280,22 @@ void Sodo::InputMouseMiddleButtonUp(WPARAM wParam, LPARAM lParam)
 		messageBuffer,
 		_countof(messageBuffer),
 		L"시작 (x, y) = (%d, %d) \n 끝 (x, y) = (%d, %d)",
-		m_clickedPositionClient.x,
-		m_clickedPositionClient.y,
+		m_inputMouseClickedPositionClient.x,
+		m_inputMouseClickedPositionClient.y,
 		GET_X_LPARAM(lParam),
 		GET_Y_LPARAM(lParam)
 	);
 
-	UINT mouseManhattanDist = abs(GET_X_LPARAM(lParam) - m_clickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_clickedPositionClient.y);
-	bool isDrag = (mouseManhattanDist > m_dragThresholdDist);
+	UINT mouseMovedManhattanDist = abs(GET_X_LPARAM(lParam) - m_inputMouseClickedPositionClient.x) + abs(GET_Y_LPARAM(lParam) - m_inputMouseClickedPositionClient.y);
+	bool isDrag = (mouseMovedManhattanDist > m_inputDragThresholdDist);
 	MessageBoxW(m_hWnd, messageBuffer, isDrag ? L"중간 마우스 드래그" : L"중간 마우스 클릭", MB_OK);
 
-	m_isClicked = false;
+	m_inputIsClicked = false;
 }
 
 void Sodo::InputMouseWheelScroll(WPARAM wParam, LPARAM lParam)
 {
-	m_scrollDelta += GET_WHEEL_DELTA_WPARAM(wParam);
+	m_inputScrollDelta += GET_WHEEL_DELTA_WPARAM(wParam);
 }
 
 void Sodo::InputKeyboardDown(WPARAM wParam, LPARAM lParam)
@@ -301,7 +303,8 @@ void Sodo::InputKeyboardDown(WPARAM wParam, LPARAM lParam)
 	//ESC를 이용한 종료를 처리함
 	if (wParam == VK_ESCAPE)
 	{
-		if (MessageBoxW(m_hWnd, L"ESC가 눌렸습니다. 어플리케이션을 종료합니까?", L"종료 문구", MB_OKCANCEL) == IDOK)
+		int result = MessageBoxW(m_hWnd, L"ESC가 눌렸습니다. 어플리케이션을 종료합니까?", L"종료 문구", MB_OKCANCEL);
+		if (result == IDOK)
 		{
 			DestroyWindow(m_hWnd);
 		}

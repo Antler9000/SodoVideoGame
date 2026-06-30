@@ -21,7 +21,7 @@ inline void ThrowIfFalse(bool bResult)
 
 inline void ThrowIfFailed(HRESULT hResult)
 {
-	if (FAILED(hResult))
+	if (FAILED(hResult) == true)
 	{
 		throw std::runtime_error("throw because of failed result");
 	}

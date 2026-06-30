@@ -6,7 +6,7 @@
 //NOTE : Dear ImGui의 Win32 + D3D12 예제에 사용된 할당자를 수정하여 사용함
 struct ImGuiDescriptorHeapAllocator
 {
-    ID3D12DescriptorHeap* Heap = nullptr;
+    ID3D12DescriptorHeap*       Heap = nullptr;
     D3D12_DESCRIPTOR_HEAP_TYPE  HeapType = D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES;
     D3D12_CPU_DESCRIPTOR_HANDLE HeapStartCpu;
     D3D12_GPU_DESCRIPTOR_HANDLE HeapStartGpu;
@@ -26,11 +26,13 @@ struct ImGuiDescriptorHeapAllocator
         for (int n = desc.NumDescriptors; n > 0; n--)
             FreeIndices.push_back(n - 1);
     }
+
     void Destroy()
     {
         Heap = nullptr;
         FreeIndices.clear();
     }
+
     void Alloc(D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_desc_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_desc_handle)
     {
         IM_ASSERT(FreeIndices.Size > 0);
@@ -39,6 +41,7 @@ struct ImGuiDescriptorHeapAllocator
         out_cpu_desc_handle->ptr = HeapStartCpu.ptr + static_cast<SIZE_T>(idx * HeapHandleIncrement);
         out_gpu_desc_handle->ptr = HeapStartGpu.ptr + static_cast<SIZE_T>(idx * HeapHandleIncrement);
     }
+
     void Free(D3D12_CPU_DESCRIPTOR_HANDLE out_cpu_desc_handle, D3D12_GPU_DESCRIPTOR_HANDLE out_gpu_desc_handle)
     {
         int cpu_idx = (int)((out_cpu_desc_handle.ptr - HeapStartCpu.ptr) / HeapHandleIncrement);

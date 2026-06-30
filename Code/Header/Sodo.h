@@ -9,6 +9,8 @@
 #include <dxgitype.h>
 #include <dxgiformat.h>
 #include <wrl/client.h>
+#include <string>
+#include <fstream>
 #include "imgui.h"
 #include "BaseApp.h"
 #include "Game.h"
@@ -38,19 +40,20 @@ public:
 
 	void InitApp()
 	{
-		InitSavedOptions();
-		InitScreenMode();
 		InitFactory();
 		InitAdapter();
 		InitOutput();
 		InitDisplayMode();
 		InitDevice();
-		InitFormatSupport();
 		InitFence();
+		InitFenceEvent();
 		InitCommandQueue();
 		InitCommandAllocator();
 		InitCommandList();
+		InitFormatSupport();
 		InitHDRSwapChainSupport();
+		InitSavedOptions();
+		InitScreenMode();
 		InitSwapChain();
 		InitBackBuffers();
 		InitViewPort();
@@ -62,7 +65,6 @@ public:
 		InitRTV();
 		InitDSV();
 		InitCBVSRVUAV();
-		InitFenceEvent();
 		InitImGui();
 		InitTimer();
 
@@ -80,18 +82,18 @@ public:
 
 		while (msg.message != WM_QUIT)
 		{
-			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) != 0)
 			{
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 			}
-			else if (m_needResetScreenMode || m_needResetHDR)
+			else if (NeedResetScreenSetting() == true)
 			{
 				ResetScreenSetting();
 			}
 			else
 			{
-				if (IsStopped())
+				if (IsStopped() == true)
 				{
 					Sleep(100);
 				}
@@ -120,11 +122,12 @@ private:
 	void InitOutput();
 	void InitDisplayMode();
 	void InitDevice();
-	void InitFormatSupport();
 	void InitFence();
+	void InitFenceEvent();
 	void InitCommandQueue();
 	void InitCommandAllocator();
 	void InitCommandList();
+	void InitFormatSupport();
 	void InitHDRSwapChainSupport();
 	void InitSwapChain();
 	void InitBackBuffers();
@@ -137,7 +140,6 @@ private:
 	void InitRTV();
 	void InitDSV();
 	void InitCBVSRVUAV();
-	void InitFenceEvent();
 	void InitImGui();
 	void InitTimer();
 
@@ -165,6 +167,9 @@ private:
 	void SetFullScreenMode();
 	void SetWindowMode();
 	void SaveOptions();
+	void RestoreOptions();
+	bool ReadOptionBool(std::ifstream& fin, std::string optionName, bool& outOptionEnabled);
+	bool ReadOptionInt(std::ifstream& fin, std::string optionName, int& outOptionEnabled);
 
 	void RenderGuiInGame(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
 	void RenderGuiLobbyMenu(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
@@ -176,104 +181,114 @@ private:
 	void RenderGuiCheckExitFromLobbyToWindows(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
 	void RenderGuiCheckExitFromPausedToWindows(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
 	void RenderGuiCheckExitFromPausedToLobby(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos);
-	void CommonRenderGuiOption();
-	void CommonRenderGuiCheckExit(GameState from, GameState to);
+	void RenderGuiOptionCommon();
+	void RenderGuiCheckExitCommon(GameState from, GameState to);
 
 public:
 
 	//NOTE : ImGui의 버튼, 체크 박스 등이 수정할 수 있어야 하므로 static으로 둠
-	static inline OptionFullScreen	m_optionFullScreen;
-	static inline OptionHDR			m_optionHDR;
-	static inline OptionTearing		m_optionTearing;
-	static inline OptionRayTracing	m_optionRayTracing;
-	static inline OptionMeshShader	m_optionMeshShader;
-	static inline OptionSound		m_optionSound;
+	static inline OptionFullScreen				m_optionFullScreen;
+	static inline OptionHDR						m_optionHDR;
+	static inline OptionTearing					m_optionTearing;
+	static inline OptionRayTracing				m_optionRayTracing;
+	static inline OptionMeshShader				m_optionMeshShader;
+	static inline OptionSound					m_optionSound;
 
 	//NOTE : ImGui에 넘겨주는 콜백 함수 속에서 기능해야 하므로 static으로 둠
-	static inline ImGuiDescriptorHeapAllocator m_imGuiDescriptorHeapAllocator = {};
+	static inline ImGuiDescriptorHeapAllocator	m_imGuiDescriptorHeapAllocator		= {};
 
 private:
-	static constexpr UINT m_backBufferCount								= 2;
-	static constexpr DXGI_FORMAT m_backBufferFormatSDR					= DXGI_FORMAT_R8G8B8A8_UNORM;
-	static constexpr DXGI_FORMAT m_backBufferFormatHDR					= DXGI_FORMAT_R16G16B16A16_FLOAT;
-	static constexpr DXGI_COLOR_SPACE_TYPE	m_backBufferColorSpaceSDR	= DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
-	static constexpr DXGI_COLOR_SPACE_TYPE	m_backBufferColorSpaceHDR	= DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709;
-	static constexpr DXGI_FORMAT m_depthStencilBufferFormat				= DXGI_FORMAT_D24_UNORM_S8_UINT;
+	static constexpr UINT						m_screenBackBufferCount				= 2;
+	static constexpr DXGI_FORMAT				m_screenBackBufferFormatSDR			= DXGI_FORMAT_R8G8B8A8_UNORM;
+	static constexpr DXGI_FORMAT				m_screenBackBufferFormatHDR			= DXGI_FORMAT_R16G16B16A16_FLOAT;
+	static constexpr DXGI_COLOR_SPACE_TYPE		m_screenBackBufferColorSpaceSDR		= DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+	static constexpr DXGI_COLOR_SPACE_TYPE		m_screenBackBufferColorSpaceHDR		= DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709;
+	static constexpr DXGI_FORMAT				m_screenDepthStencilBufferFormat	= DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-	static constexpr UINT m_dragThresholdDist = 20;
+	static constexpr UINT						m_inputDragThresholdDist			= 20;
 
-	static constexpr float m_imGuiScale						= 2.0f;
-	static constexpr ImVec2 m_imGuiSpacingSize				= ImVec2(0.0f, 10.0f);
-	static constexpr ImVec2 m_imGuiSmallButtonSize			= ImVec2(120.0f, 40.0f);
-	static constexpr ImVec2 m_imGuiMediumButtonSize			= ImVec2(240.0f, 40.0f);
-	static constexpr ImVec2 m_imguiLargeButtonSize			= ImVec2(360.0f, 40.0f);
-	static constexpr ImGuiWindowFlags m_imGuiBasicFlag		= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
-	static constexpr UINT m_imGuiDescriptorHeapCapacity		= 64;
+	static constexpr float						m_imGuiScale						= 2.0f;
+	static constexpr ImVec2						m_imGuiSpacingSize					= ImVec2(0.0f, 10.0f);
+	static constexpr ImVec2						m_imGuiSmallButtonSize				= ImVec2(120.0f, 40.0f);
+	static constexpr ImVec2						m_imGuiMediumButtonSize				= ImVec2(240.0f, 40.0f);
+	static constexpr ImVec2						m_imguiLargeButtonSize				= ImVec2(360.0f, 40.0f);
+	static constexpr UINT						m_imGuiDescriptorHeapCapacity		= 64;
+	static constexpr ImGuiWindowFlags			m_imGuiBasicFlag					= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+																					| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 
 private:
 
 	template <typename Interface>
 	using ComPtr = Microsoft::WRL::ComPtr<Interface>;
 
-	ComPtr<IDXGIFactory6>				m_factory;								//NOTE : (기본) 성능순 어댑터 획득
-	ComPtr<IDXGIAdapter3>				m_adapter;								//NOTE : (기본) 자원의 메모리 상주성 관리
-	ComPtr<IDXGIOutput>					m_output;
-	ComPtr<IDXGIOutput6>				m_output6;								//NOTE : (옵션) HDR 모니터 정보 획득
+	ComPtr<IDXGIFactory6>				m_dxgiFactory;													//NOTE : (기본) 성능순 어댑터 획득
+	ComPtr<IDXGIAdapter3>				m_dxgiAdapter;													//NOTE : (기본) 자원의 메모리 상주성 관리
+	ComPtr<IDXGIOutput>					m_dxgiOutput;
+	ComPtr<IDXGIOutput6>				m_dxgiOutput6;													//NOTE : (옵션) HDR 모니터 정보 획득
+	DXGI_OUTPUT_DESC1					m_dxgiOutputDesc									= {};		//NOTE : (옵션) HDR 모니터 정보 획득
+	DXGI_MODE_DESC						m_dxgiDisplayModeDesc								= {};
+	
 	ComPtr<ID3D12Device>				m_device;
-	ComPtr<ID3D12Device2>				m_device2;								//NOTE : (옵션) 메시 셰이더
-	ComPtr<ID3D12Device5>				m_device5;								//NOTE : (옵션) 레이 트레이싱
+	ComPtr<ID3D12Device2>				m_device2;														//NOTE : (옵션) 메시 셰이더
+	ComPtr<ID3D12Device5>				m_device5;														//NOTE : (옵션) 레이 트레이싱
+	
 	ComPtr<ID3D12Fence>					m_fence;
+	UINT64								m_fenceCurrent										= 0;
+	HANDLE								m_fenceEvent										= nullptr;
+	
 	ComPtr<ID3D12CommandQueue>			m_commandQueue;
 	ComPtr<ID3D12CommandAllocator>		m_commandAllocator;
 	ComPtr<ID3D12GraphicsCommandList>	m_commandList;
-	ComPtr<ID3D12GraphicsCommandList4>	m_commandList4;							//NOTE : (옵션) 레이 트레이싱
-	ComPtr<ID3D12GraphicsCommandList6>	m_commandList6;							//NOTE : (옵션) 메시 셰이더 생성
-	ComPtr<IDXGISwapChain3>				m_swapChain;							//NOTE : (기본) 백버퍼 인덱스 추적
-	ComPtr<ID3D12Resource>				m_backBuffers[m_backBufferCount];
-	ComPtr<ID3D12Resource>				m_depthStencilBuffer;
-	ComPtr<ID3D12DescriptorHeap>		m_descriptorHeapCBVSRVUAV;
+	ComPtr<ID3D12GraphicsCommandList4>	m_commandList4;													//NOTE : (옵션) 레이 트레이싱
+	ComPtr<ID3D12GraphicsCommandList6>	m_commandList6;													//NOTE : (옵션) 메시 셰이더 생성
+	
+	ComPtr<IDXGISwapChain3>				m_screenSwapChain;												//NOTE : (기본) 백버퍼 인덱스 추적
+	ComPtr<ID3D12Resource>				m_screenBackBuffers[m_screenBackBufferCount];
+	UINT								m_screenBackBufferIndex								= 0;
+	UINT								m_screenBackBufferWidth								= 0;
+	UINT								m_screenBackBufferHeight							= 0;
+	float								m_screenBackBufferAspectRatio						= 0.0f;
+	D3D12_VIEWPORT						m_screenViewPort									= {};
+	D3D12_RECT							m_screenScissorRectangle							= {};
+	ComPtr<ID3D12Resource>				m_screenDepthStencilBuffer;
+	
+	UINT								m_descriptorHeapCBVCount							= 0;
+	UINT								m_descriptorHeapSRVCount							= 0;
+	UINT								m_descriptorHeapUAVCount							= 0;
+	UINT								m_descriptorHeapRTVIncrementSize					= 0;
+	UINT								m_descriptorHeapDSVIncrementSize					= 0;
+	UINT								m_descriptorHeapCBVSRVUAVIncrementSize				= 0;
 	ComPtr<ID3D12DescriptorHeap>		m_descriptorHeapRTV;
 	ComPtr<ID3D12DescriptorHeap>		m_descriptorHeapDSV;
-	DXGI_OUTPUT_DESC1	m_outputDesc				= {};						//NOTE : (옵션) HDR 모니터 정보 획득
-	DXGI_MODE_DESC		m_displayModeDesc			= {};
-	UINT64				m_currentFence				= 0;
-	UINT				m_currentBackBufferIndex	= 0;
-	UINT				m_backBufferWidth			= 0;
-	UINT				m_backBufferHeight			= 0;
-	float				m_backBufferAspectRatio		= 0.0f;
-	bool				m_needResetScreenMode		= false;
-	bool				m_needResetHDR				= false;
-	D3D12_VIEWPORT		m_viewPort					= {};
-	D3D12_RECT			m_scissorRectangle			= {};
-	UINT				m_countCBV					= 0;
-	UINT				m_countSRV					= 0;
-	UINT				m_countUAV					= 0;
-	UINT				m_incrementSizeRTV			= 0;
-	UINT				m_incrementSizeDSV			= 0;
-	UINT				m_incrementSizeCBVSRVUAV	= 0;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleRTV;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleDSV;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleCBVSRVUAVForImGui;
-	CD3DX12_GPU_DESCRIPTOR_HANDLE m_gpuStartHandleCBVSRVUAVForImGui;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuStartHandleCBVSRVUAVForGame;
-	CD3DX12_GPU_DESCRIPTOR_HANDLE m_gpuStartHandleCBVSRVUAVForGame;
+	ComPtr<ID3D12DescriptorHeap>		m_descriptorHeapCBVSRVUAV;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE		m_descriptorHeapRTVCpuStartHandle;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE		m_descriptorHeapDSVCpuStartHandle;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE		m_descriptorHeapCBVSRVUAVSCpuStartHandleForImGui;
+	CD3DX12_GPU_DESCRIPTOR_HANDLE		m_descriptorHeapCBVSRVUAVSGpuStartHandleForImGui;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE		m_descriptorHeapCBVSRVUAVSCpuStartHandleForGame;
+	CD3DX12_GPU_DESCRIPTOR_HANDLE		m_descriptorHeapCBVSRVUAVSGpuStartHandleForGame;
 	
-	bool IsStopped() const { return m_isResizing || m_isInActive; }
-	bool m_isResizing = false;
-	bool m_isInActive = false;
-	void ResetTimers() { m_totalTimer.Reset(); m_captionTimer.Reset(); m_frameTimer.Reset(); }
-	void StopTimers() { if (IsStopped()) { m_totalTimer.Stop(); m_captionTimer.Stop(); m_frameTimer.Stop(); } }
-	void StartTimers() { if (IsStopped() == false) { m_totalTimer.Start(); m_captionTimer.Start(); m_frameTimer.Start(); } }
-	Timer m_totalTimer;
-	Timer m_captionTimer;
-	Timer m_frameTimer;
-	HANDLE m_fenceEvent = nullptr;
-	GameState m_gameMode = GAME_STATE_LOBBY;
+	void		TimersReset()						{ m_timerTotal.Reset(); m_timerCaption.Reset(); m_timerFrame.Reset(); }
+	void		TimersStop()						{ if (IsStopped() == true) { m_timerTotal.Stop(); m_timerCaption.Stop(); m_timerFrame.Stop(); } }
+	void		TimersStart()						{ if (IsStopped() == false) { m_timerTotal.Start(); m_timerCaption.Start(); m_timerFrame.Start(); } }
+	Timer		m_timerTotal;
+	Timer		m_timerCaption;
+	Timer		m_timerFrame;
+	
+	bool		IsStopped()	const					{ return m_isResizing || m_isInActive; }
+	bool		m_isResizing						= false;
+	bool		m_isInActive						= false;
 
-	POINT m_mousePositionClient		= { 0, 0 };
-	POINT m_clickedPositionClient	= { 0, 0 };
-	bool m_isClicked				= false;
-	int m_scrollDelta				= 0;
+	bool		NeedResetScreenSetting() const		{ return m_needResetScreenMode || m_needResetHDR; }
+	bool		m_needResetScreenMode				= false;
+	bool		m_needResetHDR						= false;
 
-	bool m_imGuiInitialized = false;
+	POINT		m_inputMousePositionClient			= { 0, 0 };
+	POINT		m_inputMouseClickedPositionClient	= { 0, 0 };
+	bool		m_inputIsClicked					= false;
+	int			m_inputScrollDelta					= 0;
+
+	GameState	m_gameState							= GAME_STATE_LOBBY;
+
+	bool		m_imGuiInitialized					= false;
 };

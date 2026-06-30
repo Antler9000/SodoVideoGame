@@ -1,4 +1,5 @@
 ﻿#include <windows.h>
+#include <d3d12sdklayers.h>
 #include <d3dx12_root_signature.h>
 #include <d3dx12_core.h>
 #include <d3d12.h>
@@ -15,6 +16,8 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <cstdio>
+#include <cstdlib>
 #include <stdexcept>
 #include "imgui.h"
 #include "imgui_impl_win32.h"
@@ -27,23 +30,6 @@
 using Microsoft::WRL::ComPtr;
 using std::wstring;
 
-void Sodo::InitSavedOptions()
-{
-
-}
-
-void Sodo::InitScreenMode()
-{
-	if(m_optionFullScreen.IsActive())
-	{
-		SetFullScreenMode();
-	}
-	else
-	{
-		SetWindowMode();
-	}
-}
-
 void Sodo::InitFactory()
 {
 	UINT factoryFlags = 0;
@@ -52,11 +38,11 @@ void Sodo::InitFactory()
 	factoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 #endif
 
-	ThrowIfFailed(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(m_factory.ReleaseAndGetAddressOf())));
+	ThrowIfFailed(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(m_dxgiFactory.ReleaseAndGetAddressOf())));
 
 	//NOTE : 쿼리 출력 매개변수는 BOOL 타입이므로, bool 타입인 m_optionTearing.featureSupported를 매개변수로 사용하면 안 됨
 	BOOL tearingQuery = FALSE;
-	m_factory->CheckFeatureSupport(
+	m_dxgiFactory->CheckFeatureSupport(
 		DXGI_FEATURE_PRESENT_ALLOW_TEARING, 
 		&tearingQuery,
 		sizeof(tearingQuery)
@@ -67,16 +53,16 @@ void Sodo::InitFactory()
 void Sodo::InitAdapter()
 {
 	ThrowIfFailed(
-		m_factory->EnumAdapterByGpuPreference(
+		m_dxgiFactory->EnumAdapterByGpuPreference(
 			0,
 			DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
-			IID_PPV_ARGS(m_adapter.ReleaseAndGetAddressOf())
+			IID_PPV_ARGS(m_dxgiAdapter.ReleaseAndGetAddressOf())
 		)
 	);
 
 #ifdef _DEBUG
 	DXGI_ADAPTER_DESC adapterDesc;
-	m_adapter->GetDesc(&adapterDesc);
+	m_dxgiAdapter->GetDesc(&adapterDesc);
 
 	wstring adapterText = L"[SODO DEBUG] 어댑터 : ";
 	adapterText += adapterDesc.Description;
@@ -88,21 +74,21 @@ void Sodo::InitAdapter()
 
 void Sodo::InitOutput()
 {
-	m_output.Reset();
-	m_output6.Reset();
+	m_dxgiOutput.Reset();
+	m_dxgiOutput6.Reset();
 
-	ThrowIfFailed(m_adapter->EnumOutputs(0, m_output.ReleaseAndGetAddressOf()));
+	ThrowIfFailed(m_dxgiAdapter->EnumOutputs(0, m_dxgiOutput.ReleaseAndGetAddressOf()));
 
-	m_optionHDR.outputSupported = SUCCEEDED(m_output.As(&m_output6));
+	m_optionHDR.outputSupported = SUCCEEDED(m_dxgiOutput.As(&m_dxgiOutput6));
 
-	if (m_optionHDR.outputSupported)
+	if (m_optionHDR.outputSupported == true)
 	{
-		m_output6->GetDesc1(&m_outputDesc);
+		m_dxgiOutput6->GetDesc1(&m_dxgiOutputDesc);
 	}
 
 #ifdef _DEBUG
 	DXGI_OUTPUT_DESC outputDesc;
-	m_output->GetDesc(&outputDesc);
+	m_dxgiOutput->GetDesc(&outputDesc);
 
 	wstring outputText = L"[SODO DEBUG] 아웃풋 : ";
 	outputText += outputDesc.DeviceName;
@@ -115,7 +101,7 @@ void Sodo::InitOutput()
 void Sodo::InitDisplayMode()
 {
 	UINT modeCount = 0;
-	ThrowIfFailed(m_output->GetDisplayModeList(m_backBufferFormatSDR, 0, &modeCount, nullptr));
+	ThrowIfFailed(m_dxgiOutput->GetDisplayModeList(m_screenBackBufferFormatSDR, 0, &modeCount, nullptr));
 
 	if (modeCount <= 0)
 	{
@@ -123,9 +109,9 @@ void Sodo::InitDisplayMode()
 	}
 
 	std::vector<DXGI_MODE_DESC> modeList(modeCount);
-	ThrowIfFailed(m_output->GetDisplayModeList(m_backBufferFormatSDR, 0, &modeCount, &modeList[0]));
+	ThrowIfFailed(m_dxgiOutput->GetDisplayModeList(m_screenBackBufferFormatSDR, 0, &modeCount, &modeList[0]));
 
-	m_displayModeDesc = *std::max_element(
+	m_dxgiDisplayModeDesc = *std::max_element(
 		modeList.begin(),
 		modeList.end(),
 		[](const DXGI_MODE_DESC& lhs, const DXGI_MODE_DESC& rhs)
@@ -154,16 +140,16 @@ void Sodo::InitDisplayMode()
 	);
 
 #ifdef _DEBUG
-	UINT refreshRateNumerator = m_displayModeDesc.RefreshRate.Numerator;
-	UINT refreshRateDenominator = m_displayModeDesc.RefreshRate.Denominator;
+	UINT refreshRateNumerator = m_dxgiDisplayModeDesc.RefreshRate.Numerator;
+	UINT refreshRateDenominator = m_dxgiDisplayModeDesc.RefreshRate.Denominator;
 
 	wchar_t displayInfoBuffer[124] = { };
 	swprintf(
 		displayInfoBuffer,
 		_countof(displayInfoBuffer),
 		L"[SODO DEBUG] 디스플레이 : %u x %u (%u/%u hz)\n",
-		m_displayModeDesc.Width,
-		m_displayModeDesc.Height,
+		m_dxgiDisplayModeDesc.Width,
+		m_dxgiDisplayModeDesc.Height,
 		refreshRateNumerator,
 		refreshRateDenominator
 	);
@@ -186,19 +172,19 @@ void Sodo::InitDevice()
 #endif
 
 	ThrowIfFailed(
-		D3D12CreateDevice(m_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(m_device.ReleaseAndGetAddressOf()))
+		D3D12CreateDevice(m_dxgiAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(m_device.ReleaseAndGetAddressOf()))
 	);
 
 	m_optionMeshShader.deviceSupported = SUCCEEDED(m_device.As(&m_device2));
 	m_optionRayTracing.deviceSupported = SUCCEEDED(m_device.As(&m_device5));
 
-	if (m_optionMeshShader.deviceSupported)
+	if (m_optionMeshShader.deviceSupported == true)
 	{	
 		D3D12_FEATURE_DATA_D3D12_OPTIONS7 meshShaderFeatureQuery = {};
 		m_device2->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &meshShaderFeatureQuery, sizeof(meshShaderFeatureQuery));
 		m_optionMeshShader.featureSupported = (meshShaderFeatureQuery.MeshShaderTier != D3D12_MESH_SHADER_TIER_NOT_SUPPORTED);
 	}
-	if (m_optionRayTracing.deviceSupported)
+	if (m_optionRayTracing.deviceSupported == true)
 	{
 		D3D12_FEATURE_DATA_D3D12_OPTIONS5 rayTracingFeatureQuery = {};
 		m_device5->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &rayTracingFeatureQuery, sizeof(rayTracingFeatureQuery));
@@ -206,49 +192,23 @@ void Sodo::InitDevice()
 	}
 }
 
-void Sodo::InitFormatSupport()
-{
-	D3D12_FEATURE_DATA_FORMAT_SUPPORT backBufferFormatSDRQuery = {
-		m_backBufferFormatSDR,
-		D3D12_FORMAT_SUPPORT1_NONE,
-		D3D12_FORMAT_SUPPORT2_NONE
-	};
-	D3D12_FEATURE_DATA_FORMAT_SUPPORT backBufferFormatHDRQuery = {
-		m_backBufferFormatHDR,
-		D3D12_FORMAT_SUPPORT1_NONE,
-		D3D12_FORMAT_SUPPORT2_NONE
-	};
-	D3D12_FEATURE_DATA_FORMAT_SUPPORT depthStencilFormatQuery = {
-		m_depthStencilBufferFormat,
-		D3D12_FORMAT_SUPPORT1_NONE,
-		D3D12_FORMAT_SUPPORT2_NONE
-	};
-
-	ThrowIfFailed(
-		m_device->CheckFeatureSupport(
-			D3D12_FEATURE_FORMAT_SUPPORT, &backBufferFormatSDRQuery, sizeof(backBufferFormatSDRQuery)
-		)
-	);
-	HRESULT hdrQueryResult = m_device->CheckFeatureSupport(
-		D3D12_FEATURE_FORMAT_SUPPORT, &backBufferFormatHDRQuery, sizeof(backBufferFormatHDRQuery)
-	);
-	ThrowIfFailed(
-		m_device->CheckFeatureSupport(
-			D3D12_FEATURE_FORMAT_SUPPORT, &depthStencilFormatQuery, sizeof(depthStencilFormatQuery)
-		)
-	);
-
-	ThrowIfFalse(backBufferFormatSDRQuery.Support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET);
-	if (SUCCEEDED(hdrQueryResult))
-	{
-		m_optionHDR.formatSupported = ((backBufferFormatHDRQuery.Support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET) != 0);
-	}
-	ThrowIfFalse(depthStencilFormatQuery.Support1 & D3D12_FORMAT_SUPPORT1_DEPTH_STENCIL);
-}
-
 void Sodo::InitFence()
 {
-	ThrowIfFailed(m_device->CreateFence(m_currentFence, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.ReleaseAndGetAddressOf())));
+	ThrowIfFailed(m_device->CreateFence(m_fenceCurrent, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.ReleaseAndGetAddressOf())));
+}
+
+void Sodo::InitFenceEvent()
+{
+	CloseFenceEvent();
+
+	m_fenceEvent = CreateEventExW(
+		nullptr,
+		nullptr,
+		0,
+		EVENT_MODIFY_STATE | SYNCHRONIZE
+	);
+
+	ThrowIfNull(m_fenceEvent);
 }
 
 void Sodo::InitCommandQueue()
@@ -295,19 +255,59 @@ void Sodo::InitCommandList()
 	m_commandList->Close();
 }
 
+void Sodo::InitFormatSupport()
+{
+	D3D12_FEATURE_DATA_FORMAT_SUPPORT backBufferFormatSDRQuery = {
+		m_screenBackBufferFormatSDR,
+		D3D12_FORMAT_SUPPORT1_NONE,
+		D3D12_FORMAT_SUPPORT2_NONE
+	};
+	D3D12_FEATURE_DATA_FORMAT_SUPPORT backBufferFormatHDRQuery = {
+		m_screenBackBufferFormatHDR,
+		D3D12_FORMAT_SUPPORT1_NONE,
+		D3D12_FORMAT_SUPPORT2_NONE
+	};
+	D3D12_FEATURE_DATA_FORMAT_SUPPORT depthStencilFormatQuery = {
+		m_screenDepthStencilBufferFormat,
+		D3D12_FORMAT_SUPPORT1_NONE,
+		D3D12_FORMAT_SUPPORT2_NONE
+	};
+
+	ThrowIfFailed(
+		m_device->CheckFeatureSupport(
+			D3D12_FEATURE_FORMAT_SUPPORT, &backBufferFormatSDRQuery, sizeof(backBufferFormatSDRQuery)
+		)
+	);
+	HRESULT hdrQueryResult = m_device->CheckFeatureSupport(
+		D3D12_FEATURE_FORMAT_SUPPORT, &backBufferFormatHDRQuery, sizeof(backBufferFormatHDRQuery)
+	);
+	ThrowIfFailed(
+		m_device->CheckFeatureSupport(
+			D3D12_FEATURE_FORMAT_SUPPORT, &depthStencilFormatQuery, sizeof(depthStencilFormatQuery)
+		)
+	);
+
+	ThrowIfFalse(backBufferFormatSDRQuery.Support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET);
+	if (SUCCEEDED(hdrQueryResult) == true)
+	{
+		m_optionHDR.formatSupported = ((backBufferFormatHDRQuery.Support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET) != 0);
+	}
+	ThrowIfFalse(depthStencilFormatQuery.Support1 & D3D12_FORMAT_SUPPORT1_DEPTH_STENCIL);
+}
+
 void Sodo::InitHDRSwapChainSupport()
 {
-	m_swapChain.Reset();
+	m_screenSwapChain.Reset();
 
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc	= {};
 	swapChainDesc.Width					= 0;
 	swapChainDesc.Height				= 0;
-	swapChainDesc.Format				= m_backBufferFormatHDR;
+	swapChainDesc.Format				= m_screenBackBufferFormatHDR;
 	swapChainDesc.Stereo				= false;
 	swapChainDesc.SampleDesc.Count		= 1;
 	swapChainDesc.SampleDesc.Quality	= 0;
 	swapChainDesc.BufferUsage			= DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.BufferCount			= m_backBufferCount;
+	swapChainDesc.BufferCount			= m_screenBackBufferCount;
 	swapChainDesc.Scaling				= DXGI_SCALING_STRETCH;
 	swapChainDesc.SwapEffect			= DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.AlphaMode				= DXGI_ALPHA_MODE_UNSPECIFIED;
@@ -317,7 +317,7 @@ void Sodo::InitHDRSwapChainSupport()
 	ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
 
 	ThrowIfFailed(
-		m_factory->CreateSwapChainForHwnd(
+		m_dxgiFactory->CreateSwapChainForHwnd(
 			m_commandQueue.Get(),
 			m_hWnd,
 			&swapChainDesc,
@@ -332,26 +332,68 @@ void Sodo::InitHDRSwapChainSupport()
 	ThrowIfFailed((tempSwapChain.As(&tempSwapChain3)));
 
 	UINT colorSpaceHDRQuery = 0;
-	HRESULT queryResult = tempSwapChain3->CheckColorSpaceSupport(m_backBufferColorSpaceHDR, &colorSpaceHDRQuery);
-	if (SUCCEEDED(queryResult))
+	HRESULT queryResult = tempSwapChain3->CheckColorSpaceSupport(m_screenBackBufferColorSpaceHDR, &colorSpaceHDRQuery);
+	if (SUCCEEDED(queryResult) == true)
 	{
 		m_optionHDR.colorSpaceSupported = ((colorSpaceHDRQuery & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) != 0);
 	}
 }
 
+void Sodo::InitSavedOptions()
+{
+	RestoreOptions();
+
+	if (m_optionFullScreen.IsSupported() == false)
+	{
+		m_optionFullScreen.userEnabled = false;
+	}
+
+	if (m_optionHDR.IsSupported() == false)
+	{
+		m_optionHDR.userEnabled = false;
+	}
+
+	if (m_optionTearing.IsSupported() == false)
+	{
+		m_optionTearing.userEnabled = false;
+	}
+
+	if (m_optionRayTracing.IsSupported() == false)
+	{
+		m_optionRayTracing.userEnabled = false;
+	}
+
+	if (m_optionMeshShader.IsSupported() == false)
+	{
+		m_optionMeshShader.userEnabled = false;
+	}
+}
+
+void Sodo::InitScreenMode()
+{
+	if (m_optionFullScreen.IsActive() == true)
+	{
+		SetFullScreenMode();
+	}
+	else
+	{
+		SetWindowMode();
+	}
+}
+
 void Sodo::InitSwapChain()
 {
-	m_swapChain.Reset();
+	m_screenSwapChain.Reset();
 
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 	swapChainDesc.Width					= 0;
 	swapChainDesc.Height				= 0;
-	swapChainDesc.Format				= m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR;
+	swapChainDesc.Format				= m_optionHDR.IsActive() ? m_screenBackBufferFormatHDR : m_screenBackBufferFormatSDR;
 	swapChainDesc.Stereo				= false;
 	swapChainDesc.SampleDesc.Count		= 1;
 	swapChainDesc.SampleDesc.Quality	= 0;
 	swapChainDesc.BufferUsage			= DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.BufferCount			= m_backBufferCount;
+	swapChainDesc.BufferCount			= m_screenBackBufferCount;
 	swapChainDesc.Scaling				= DXGI_SCALING_STRETCH;
 	swapChainDesc.SwapEffect			= DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.AlphaMode				= DXGI_ALPHA_MODE_UNSPECIFIED;
@@ -361,7 +403,7 @@ void Sodo::InitSwapChain()
 	ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
 
 	ThrowIfFailed(
-		m_factory->CreateSwapChainForHwnd(
+		m_dxgiFactory->CreateSwapChainForHwnd(
 			m_commandQueue.Get(),
 			m_hWnd,
 			&swapChainDesc,
@@ -371,15 +413,15 @@ void Sodo::InitSwapChain()
 		)
 	);
 
-	ThrowIfFailed(tempSwapChain.As(&m_swapChain));
+	ThrowIfFailed(tempSwapChain.As(&m_screenSwapChain));
 
-	if (m_optionHDR.IsActive())
+	if (m_optionHDR.IsActive() == true)
 	{
-		m_swapChain->SetColorSpace1(m_backBufferColorSpaceHDR);
+		m_screenSwapChain->SetColorSpace1(m_screenBackBufferColorSpaceHDR);
 	}
 	else
 	{
-		m_swapChain->SetColorSpace1(m_backBufferColorSpaceSDR);
+		m_screenSwapChain->SetColorSpace1(m_screenBackBufferColorSpaceSDR);
 	}
 }
 
@@ -387,35 +429,35 @@ void Sodo::InitBackBuffers()
 {
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 
-	m_swapChain->GetDesc1(&swapChainDesc);
-	m_backBufferWidth = swapChainDesc.Width;
-	m_backBufferHeight = swapChainDesc.Height;
-	m_backBufferAspectRatio = (m_backBufferHeight ? (static_cast<float>(m_backBufferWidth) / m_backBufferHeight) : 0);
+	m_screenSwapChain->GetDesc1(&swapChainDesc);
+	m_screenBackBufferWidth = swapChainDesc.Width;
+	m_screenBackBufferHeight = swapChainDesc.Height;
+	m_screenBackBufferAspectRatio = (m_screenBackBufferHeight ? (static_cast<float>(m_screenBackBufferWidth) / m_screenBackBufferHeight) : 0);
 
-	m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+	m_screenBackBufferIndex = m_screenSwapChain->GetCurrentBackBufferIndex();
 
-	for (int i = 0; i < m_backBufferCount; i++)
+	for (int i = 0; i < m_screenBackBufferCount; i++)
 	{
-		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(m_backBuffers[i].ReleaseAndGetAddressOf())));
+		ThrowIfFailed(m_screenSwapChain->GetBuffer(i, IID_PPV_ARGS(m_screenBackBuffers[i].ReleaseAndGetAddressOf())));
 	}
 }
 
 void Sodo::InitViewPort()
 {
-	m_viewPort.TopLeftX = 0.0f;
-	m_viewPort.TopLeftY = 0.0f;
-	m_viewPort.Width = FLOAT(m_backBufferWidth);
-	m_viewPort.Height = FLOAT(m_backBufferHeight);
-	m_viewPort.MinDepth = 0.0f;
-	m_viewPort.MaxDepth = 1.0f;
+	m_screenViewPort.TopLeftX = 0.0f;
+	m_screenViewPort.TopLeftY = 0.0f;
+	m_screenViewPort.Width = FLOAT(m_screenBackBufferWidth);
+	m_screenViewPort.Height = FLOAT(m_screenBackBufferHeight);
+	m_screenViewPort.MinDepth = 0.0f;
+	m_screenViewPort.MaxDepth = 1.0f;
 }
 
 void Sodo::InitScissorRectangle()
 {
-	m_scissorRectangle.left = 0;
-	m_scissorRectangle.top = 0;
-	m_scissorRectangle.right = m_backBufferWidth;
-	m_scissorRectangle.bottom = m_backBufferHeight;
+	m_screenScissorRectangle.left = 0;
+	m_screenScissorRectangle.top = 0;
+	m_screenScissorRectangle.right = m_screenBackBufferWidth;
+	m_screenScissorRectangle.bottom = m_screenBackBufferHeight;
 }
 
 void Sodo::InitDepthStencilBuffer()
@@ -423,18 +465,18 @@ void Sodo::InitDepthStencilBuffer()
 	D3D12_RESOURCE_DESC depthStencilBufferDesc = {};
 	depthStencilBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depthStencilBufferDesc.Alignment = 0;
-	depthStencilBufferDesc.Width = m_backBufferWidth;
-	depthStencilBufferDesc.Height = m_backBufferHeight;
+	depthStencilBufferDesc.Width = m_screenBackBufferWidth;
+	depthStencilBufferDesc.Height = m_screenBackBufferHeight;
 	depthStencilBufferDesc.DepthOrArraySize = 1;
 	depthStencilBufferDesc.MipLevels = 1;
-	depthStencilBufferDesc.Format = m_depthStencilBufferFormat;
+	depthStencilBufferDesc.Format = m_screenDepthStencilBufferFormat;
 	depthStencilBufferDesc.SampleDesc.Count = 1;
 	depthStencilBufferDesc.SampleDesc.Quality = 0;
 	depthStencilBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthStencilBufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
 	D3D12_CLEAR_VALUE clearValue = {};
-	clearValue.Format = m_depthStencilBufferFormat;
+	clearValue.Format = m_screenDepthStencilBufferFormat;
 	clearValue.DepthStencil.Depth = 1.0f;
 	clearValue.DepthStencil.Stencil = 0;
 
@@ -447,7 +489,7 @@ void Sodo::InitDepthStencilBuffer()
 			&depthStencilBufferDesc,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			&clearValue,
-			IID_PPV_ARGS(m_depthStencilBuffer.ReleaseAndGetAddressOf())
+			IID_PPV_ARGS(m_screenDepthStencilBuffer.ReleaseAndGetAddressOf())
 		)
 	);
 }
@@ -455,7 +497,7 @@ void Sodo::InitDepthStencilBuffer()
 void Sodo::InitDescriptorHeapRTV()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
-	descriptorHeapDesc.NumDescriptors = m_backBufferCount;
+	descriptorHeapDesc.NumDescriptors = m_screenBackBufferCount;
 	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	descriptorHeapDesc.NodeMask = 0;
@@ -467,8 +509,8 @@ void Sodo::InitDescriptorHeapRTV()
 		)
 	);
 
-	m_incrementSizeRTV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	m_cpuStartHandleRTV = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapRTV->GetCPUDescriptorHandleForHeapStart());
+	m_descriptorHeapRTVIncrementSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	m_descriptorHeapRTVCpuStartHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapRTV->GetCPUDescriptorHandleForHeapStart());
 }
 
 void Sodo::InitDescriptorHeapDSV()
@@ -486,14 +528,14 @@ void Sodo::InitDescriptorHeapDSV()
 		)
 	);
 
-	m_incrementSizeDSV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-	m_cpuStartHandleDSV = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapDSV->GetCPUDescriptorHandleForHeapStart());
+	m_descriptorHeapDSVIncrementSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	m_descriptorHeapDSVCpuStartHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapDSV->GetCPUDescriptorHandleForHeapStart());
 }
 
 void Sodo::InitDescriptorHeapCBVSRVUAV()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
-	UINT totalCount = m_countCBV + m_countSRV + m_countUAV;
+	UINT totalCount = m_descriptorHeapCBVCount + m_descriptorHeapSRVCount + m_descriptorHeapUAVCount;
 	descriptorHeapDesc.NumDescriptors = (totalCount ? totalCount : 128);
 	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -506,30 +548,30 @@ void Sodo::InitDescriptorHeapCBVSRVUAV()
 		)
 	);
 
-	//NOTE : 우선 ImGui가 SRV를 둘 곳을 고정적으로 남기고, 그 뒷부분부터 사용하기로 함
-	m_incrementSizeCBVSRVUAV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	m_cpuStartHandleCBVSRVUAVForImGui = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetCPUDescriptorHandleForHeapStart());
-	m_gpuStartHandleCBVSRVUAVForImGui = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetGPUDescriptorHandleForHeapStart());
+	//NOTE : ImGui가 SRV를 둘 곳을 고정적으로 남겨두고, 그 뒷부분부터 사용하기로 함
+	m_descriptorHeapCBVSRVUAVIncrementSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_descriptorHeapCBVSRVUAVSCpuStartHandleForImGui = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetCPUDescriptorHandleForHeapStart());
+	m_descriptorHeapCBVSRVUAVSGpuStartHandleForImGui = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descriptorHeapCBVSRVUAV->GetGPUDescriptorHandleForHeapStart());
 
-	m_cpuStartHandleCBVSRVUAVForGame = m_cpuStartHandleCBVSRVUAVForImGui;
-	m_cpuStartHandleCBVSRVUAVForGame.Offset(m_imGuiDescriptorHeapCapacity, m_incrementSizeCBVSRVUAV);
-	m_gpuStartHandleCBVSRVUAVForGame = m_gpuStartHandleCBVSRVUAVForImGui;
-	m_gpuStartHandleCBVSRVUAVForGame.Offset(m_imGuiDescriptorHeapCapacity, m_incrementSizeCBVSRVUAV);
+	m_descriptorHeapCBVSRVUAVSCpuStartHandleForGame = m_descriptorHeapCBVSRVUAVSCpuStartHandleForImGui;
+	m_descriptorHeapCBVSRVUAVSCpuStartHandleForGame.Offset(m_imGuiDescriptorHeapCapacity, m_descriptorHeapCBVSRVUAVIncrementSize);
+	m_descriptorHeapCBVSRVUAVSGpuStartHandleForGame = m_descriptorHeapCBVSRVUAVSGpuStartHandleForImGui;
+	m_descriptorHeapCBVSRVUAVSGpuStartHandleForGame.Offset(m_imGuiDescriptorHeapCapacity, m_descriptorHeapCBVSRVUAVIncrementSize);
 }
 
 
 void Sodo::InitRTV()
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandleRTV = m_cpuStartHandleRTV;
-	for (int i = 0; i < m_backBufferCount; i++)
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandleRTV = m_descriptorHeapRTVCpuStartHandle;
+	for (int i = 0; i < m_screenBackBufferCount; i++)
 	{
-		m_device->CreateRenderTargetView(m_backBuffers[i].Get(), nullptr, cpuHandleRTV.Offset(i, m_incrementSizeRTV));
+		m_device->CreateRenderTargetView(m_screenBackBuffers[i].Get(), nullptr, cpuHandleRTV.Offset(i, m_descriptorHeapRTVIncrementSize));
 	}
 }
 
 void Sodo::InitDSV()
 {
-	m_device->CreateDepthStencilView(m_depthStencilBuffer.Get(), nullptr, m_cpuStartHandleDSV);
+	m_device->CreateDepthStencilView(m_screenDepthStencilBuffer.Get(), nullptr, m_descriptorHeapDSVCpuStartHandle);
 }
 
 void Sodo::InitCBVSRVUAV()
@@ -537,23 +579,9 @@ void Sodo::InitCBVSRVUAV()
 
 }
 
-void Sodo::InitFenceEvent()
-{
-	CloseFenceEvent();
-
-	m_fenceEvent = CreateEventExW(
-		nullptr,
-		nullptr,
-		0,
-		EVENT_MODIFY_STATE | SYNCHRONIZE
-	);
-
-	ThrowIfNull(m_fenceEvent);
-}
-
 void Sodo::InitImGui()
 {
-	if (m_imGuiInitialized)
+	if (m_imGuiInitialized == true)
 	{
 		CloseImGui();
 		m_imGuiDescriptorHeapAllocator.Destroy();
@@ -565,11 +593,17 @@ void Sodo::InitImGui()
 	initInfo.Device = m_device.Get();
 	initInfo.CommandQueue = m_commandQueue.Get();
 	initInfo.NumFramesInFlight = 1;
-	initInfo.RTVFormat = m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR;
+	initInfo.RTVFormat = m_optionHDR.IsActive() ? m_screenBackBufferFormatHDR : m_screenBackBufferFormatSDR;
 
 	initInfo.SrvDescriptorHeap = m_descriptorHeapCBVSRVUAV.Get();
-	initInfo.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) { return m_imGuiDescriptorHeapAllocator.Alloc(out_cpu_handle, out_gpu_handle); };
-	initInfo.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle) { return m_imGuiDescriptorHeapAllocator.Free(cpu_handle, gpu_handle); };
+	initInfo.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle)
+		{ 
+			return m_imGuiDescriptorHeapAllocator.Alloc(out_cpu_handle, out_gpu_handle);
+		};
+	initInfo.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle)
+		{
+		return m_imGuiDescriptorHeapAllocator.Free(cpu_handle, gpu_handle);
+		};
 	
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -608,5 +642,5 @@ void Sodo::InitImGui()
 
 void Sodo::InitTimer()
 {
-	ResetTimers();
+	TimersReset();
 }

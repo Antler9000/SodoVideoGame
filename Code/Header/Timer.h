@@ -23,24 +23,24 @@ public:
 	{
 		m_isStopped = false;
 
-		m_startedTimePoint = Clock::now();
-		m_stoppedTimePoint = m_startedTimePoint;
-		m_currentTimePoint = m_startedTimePoint;
+		m_timePointStarted = Clock::now();
+		m_timePointStopped = m_timePointStarted;
+		m_timePointCurrent = m_timePointStarted;
 
-		m_pausedTime = Duration::zero();
-		m_elapsedTime = Duration::zero();
+		m_timePaused = Duration::zero();
+		m_timeElapsed = Duration::zero();
 	}
 
 	void Stop()
 	{
-		if (m_isStopped)
+		if (m_isStopped == true)
 		{
 			return;
 		}
 
 		m_isStopped = true;
 
-		m_stoppedTimePoint = Clock::now();
+		m_timePointStopped = Clock::now();
 	}
 
 	void Start()
@@ -52,35 +52,35 @@ public:
 
 		m_isStopped = false;
 
-		m_pausedTime += Clock::now() - m_stoppedTimePoint;
+		m_timePaused += Clock::now() - m_timePointStopped;
 	}
 
 	void Mark()
 	{
-		m_startedTimePoint = Clock::now();
-		m_stoppedTimePoint = m_startedTimePoint;
-		m_currentTimePoint = m_startedTimePoint;
+		m_timePointStarted = Clock::now();
+		m_timePointStopped = m_timePointStarted;
+		m_timePointCurrent = m_timePointStarted;
 
-		m_pausedTime = Duration::zero();
+		m_timePaused = Duration::zero();
 	}
 
 	void Update()
 	{
-		m_currentTimePoint = Clock::now();
+		m_timePointCurrent = Clock::now();
 
 		if (m_isStopped == false)
 		{
-			m_elapsedTime = (m_currentTimePoint - m_startedTimePoint) - m_pausedTime;
+			m_timeElapsed = (m_timePointCurrent - m_timePointStarted) - m_timePaused;
 		}
 		else
 		{
-			m_elapsedTime = (m_stoppedTimePoint - m_startedTimePoint) - m_pausedTime;
+			m_timeElapsed = (m_timePointStopped - m_timePointStarted) - m_timePaused;
 		}
 	}
 
 	double GetTimeMilli() const
 	{
-		return DurationMilli(m_elapsedTime).count();
+		return DurationMilli(m_timeElapsed).count();
 	}
 
 private:
@@ -92,10 +92,10 @@ private:
 
 	bool m_isStopped;
 
-	TimePoint m_startedTimePoint;
-	TimePoint m_stoppedTimePoint;
-	TimePoint m_currentTimePoint;
+	TimePoint m_timePointStarted;
+	TimePoint m_timePointStopped;
+	TimePoint m_timePointCurrent;
 
-	Duration m_pausedTime;
-	Duration m_elapsedTime;
+	Duration m_timePaused;
+	Duration m_timeElapsed;
 }; 

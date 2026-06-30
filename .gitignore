@@ -6,6 +6,10 @@
 # ImGui
 imgui.ini
 
+# OptionSaved
+SavedSettings.txt
+SavedSettingsTemp.txt
+
 # User-specific files
 *.rsuser
 *.suo

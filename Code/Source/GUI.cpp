@@ -22,9 +22,10 @@ void Sodo::RenderGuiInGame(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPos)
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Menu", m_imGuiSmallButtonSize))
+	bool menuButtonClicked = ImGui::Button("Menu", m_imGuiSmallButtonSize);
+	if (menuButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_PAUSED;
+		m_gameState = GAME_STATE_PAUSED;
 	}
 
 	ImGui::End();
@@ -39,27 +40,30 @@ void Sodo::RenderGuiLobbyMenu(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterPo
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Play", m_imGuiSmallButtonSize))
+	bool playButtonClicked = ImGui::Button("Play", m_imGuiSmallButtonSize);
+	if (playButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_LOADING_TO_GAME;
+		m_gameState = GAME_STATE_LOADING_TO_GAME;
 	}
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Option", m_imGuiSmallButtonSize))
+	bool optionButtonClicked = ImGui::Button("Option", m_imGuiSmallButtonSize);
+	if (optionButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_OPTION_FROM_LOBBY;
+		m_gameState = GAME_STATE_OPTION_FROM_LOBBY;
 	}
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Exit", m_imGuiSmallButtonSize))
+	bool exitButtonClicked = ImGui::Button("Exit", m_imGuiSmallButtonSize);
+	if (exitButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_CHECK_EXIT_FROM_LOBBY_TO_WINDOWS;
+		m_gameState = GAME_STATE_CHECK_EXIT_FROM_LOBBY_TO_WINDOWS;
 	}
 
 	ImGui::End();
@@ -74,36 +78,40 @@ void Sodo::RenderGuiPausedMenu(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCenterP
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Resume", m_imGuiSmallButtonSize))
+	bool resumeButtonClicked = ImGui::Button("Resume", m_imGuiSmallButtonSize);
+	if (resumeButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_IN_GAME;
+		m_gameState = GAME_STATE_IN_GAME;
 	}
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Option", m_imGuiSmallButtonSize))
+	bool optionButtonClicked = ImGui::Button("Option", m_imGuiSmallButtonSize);
+	if (optionButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_OPTION_FROM_PAUSED;
+		m_gameState = GAME_STATE_OPTION_FROM_PAUSED;
 	}
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Exit to lobby", m_imGuiMediumButtonSize))
+	bool exitToLobbyButtonClicked = ImGui::Button("Exit to lobby", m_imGuiMediumButtonSize);
+	if (exitToLobbyButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_CHECK_EXIT_FROM_PAUSED_TO_LOBBY;
+		m_gameState = GAME_STATE_CHECK_EXIT_FROM_PAUSED_TO_LOBBY;
 	}
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 	ImGui::Separator();
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Exit to window", m_imGuiMediumButtonSize))
+	bool exitToWindowButtonClicked = ImGui::Button("Exit to window", m_imGuiMediumButtonSize);
+	if (exitToWindowButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_CHECK_EXIT_FROM_PAUSED_TO_WINDOWS;
+		m_gameState = GAME_STATE_CHECK_EXIT_FROM_PAUSED_TO_WINDOWS;
 	}
 
 	ImGui::End();
@@ -125,9 +133,10 @@ void Sodo::RenderGuiLoadingToGame(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCent
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Click here to start", m_imguiLargeButtonSize))
+	bool startButtonClicked = ImGui::Button("Click here to start", m_imguiLargeButtonSize);
+	if (startButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_IN_GAME;
+		m_gameState = GAME_STATE_IN_GAME;
 	}
 
 	ImGui::End();
@@ -149,9 +158,10 @@ void Sodo::RenderGuiLoadingToLobby(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCen
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("Click here to end", m_imguiLargeButtonSize))
+	bool endButtonClicked = ImGui::Button("Click here to end", m_imguiLargeButtonSize);
+	if (endButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_LOBBY;
+		m_gameState = GAME_STATE_LOBBY;
 	}
 
 	ImGui::End();
@@ -164,12 +174,15 @@ void Sodo::RenderGuiOptionFromLobby(ImGuiViewport* imGuiViewPort, ImVec2 imGuiCe
 
 	ImGui::Begin("Option", nullptr, m_imGuiBasicFlag);
 
-	if (ImGui::Button("Back", m_imGuiSmallButtonSize))
+	bool backButtonClicked = ImGui::Button("Back", m_imGuiSmallButtonSize);
+	if (backButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_LOBBY;
+		SaveOptions();
+
+		m_gameState = GAME_STATE_LOBBY;
 	}
 
-	CommonRenderGuiOption();
+	RenderGuiOptionCommon();
 
 	ImGui::End();
 }
@@ -181,12 +194,15 @@ void Sodo::RenderGuiOptionFromPaused(ImGuiViewport* imGuiViewPort, ImVec2 imGuiC
 
 	ImGui::Begin("Option", nullptr, m_imGuiBasicFlag);
 
-	if (ImGui::Button("Back", m_imGuiSmallButtonSize))
+	bool backButtonClicked = ImGui::Button("Back", m_imGuiSmallButtonSize);
+	if (backButtonClicked == true)
 	{
-		m_gameMode = GAME_STATE_PAUSED;
+		SaveOptions();
+
+		m_gameState = GAME_STATE_PAUSED;
 	}
 
-	CommonRenderGuiOption();
+	RenderGuiOptionCommon();
 
 	ImGui::End();
 }
@@ -202,7 +218,7 @@ void Sodo::RenderGuiCheckExitFromLobbyToWindows(ImGuiViewport* imGuiViewPort, Im
 
 	ImGui::Text("Do you really want to exit to window?");
 
-	CommonRenderGuiCheckExit(GAME_STATE_LOBBY, GAME_STATE_TERMINATE);
+	RenderGuiCheckExitCommon(GAME_STATE_LOBBY, GAME_STATE_TERMINATE);
 
 	ImGui::End();
 }
@@ -218,7 +234,7 @@ void Sodo::RenderGuiCheckExitFromPausedToWindows(ImGuiViewport* imGuiViewPort, I
 
 	ImGui::Text("Do you really want to exit to window?");
 
-	CommonRenderGuiCheckExit(GAME_STATE_PAUSED, GAME_STATE_TERMINATE);
+	RenderGuiCheckExitCommon(GAME_STATE_PAUSED, GAME_STATE_TERMINATE);
 
 	ImGui::End();
 }
@@ -234,29 +250,25 @@ void Sodo::RenderGuiCheckExitFromPausedToLobby(ImGuiViewport* imGuiViewPort, ImV
 
 	ImGui::Text("Do you really want to exit to lobby?");
 
-	CommonRenderGuiCheckExit(GAME_STATE_PAUSED, GAME_STATE_LOADING_TO_LOBBY);
+	RenderGuiCheckExitCommon(GAME_STATE_PAUSED, GAME_STATE_LOADING_TO_LOBBY);
 
 	ImGui::End();
 }
 
-void Sodo::CommonRenderGuiOption()
+void Sodo::RenderGuiOptionCommon()
 {
 	bool previousFullScreenState = m_optionFullScreen.IsActive();
 	bool previousHDRState = m_optionHDR.IsActive();
-	bool previousTearingState = m_optionTearing.IsActive();
-	bool previousRayTracingState = m_optionRayTracing.IsActive();
-	bool previousMeshShaderState = m_optionMeshShader.IsActive();
-	OptionSound previousSoundState = m_optionSound;
 
 	ImGui::Dummy(m_imGuiSpacingSize);
 
 	ImGui::Text("Display");
 	ImGui::Checkbox("Full Screen", &m_optionFullScreen.userEnabled);
-	ImGui::BeginDisabled(!m_optionHDR.IsSupported());
+	ImGui::BeginDisabled(m_optionHDR.IsSupported() == false);
 	ImGui::Checkbox("HDR", &m_optionHDR.userEnabled);
 	ImGui::EndDisabled();
 	ImGui::SameLine();
-	ImGui::BeginDisabled(!m_optionTearing.IsSupported());
+	ImGui::BeginDisabled(m_optionTearing.IsSupported() == false);
 	ImGui::Checkbox("VRR", &m_optionTearing.userEnabled);
 	ImGui::EndDisabled();
 
@@ -264,10 +276,10 @@ void Sodo::CommonRenderGuiOption()
 	ImGui::Separator();
 
 	ImGui::Text("Graphics");
-	ImGui::BeginDisabled(!m_optionRayTracing.IsSupported());
+	ImGui::BeginDisabled(m_optionRayTracing.IsSupported() == false);
 	ImGui::Checkbox("Ray Tracing", &m_optionRayTracing.userEnabled);
 	ImGui::EndDisabled();
-	ImGui::BeginDisabled(!m_optionMeshShader.IsSupported());
+	ImGui::BeginDisabled(m_optionMeshShader.IsSupported() == false);
 	ImGui::Checkbox("Mesh Shader", &m_optionMeshShader.userEnabled);
 	ImGui::EndDisabled();
 
@@ -275,65 +287,39 @@ void Sodo::CommonRenderGuiOption()
 	ImGui::Separator();
 
 	ImGui::Text("Sound");
-	ImGui::Checkbox("Master", &m_optionSound.userEnabled);
-	ImGui::SliderInt("Main Volume", &m_optionSound.mainVolume, 0.0f, 100.0f, "%d%%");
-	ImGui::SliderInt("UI Volume", &m_optionSound.uiVolume, 0.0f, 100.0f, "%d%%");
-	ImGui::SliderInt("Effect Volume", &m_optionSound.effectVolume, 0.0f, 100.0f, "%d%%");
-	ImGui::SliderInt("Music Volume", &m_optionSound.musicVolume, 0.0f, 100.0f, "%d%%");
+	ImGui::SliderInt("Master Volume", &m_optionSound.masterVolume, 0, 100, "%d%%");
+	ImGui::SliderInt("UI Volume", &m_optionSound.uiVolume, 0, 100, "%d%%");
+	ImGui::SliderInt("Unit Volume", &m_optionSound.unitVolume, 0, 100, "%d%%");
+	ImGui::SliderInt("Effect Volume", &m_optionSound.effectVolume, 0, 100, "%d%%");
+	ImGui::SliderInt("Music Volume", &m_optionSound.musicVolume, 0, 100, "%d%%");
 
 	bool nowFullScreenState = m_optionFullScreen.IsActive();
 	bool nowHDRState = m_optionHDR.IsActive();
-	bool nowTearingState = m_optionTearing.IsActive();
-	bool nowRayTracingState = m_optionRayTracing.IsActive();
-	bool nowMeshShaderState = m_optionMeshShader.IsActive();
-	OptionSound nowSoundState = m_optionSound;
 
-	bool needSaveOptions = false;
 	if (previousFullScreenState != nowFullScreenState)
 	{
 		m_needResetScreenMode = true;
-		needSaveOptions = true;
 	}
 	if (previousHDRState != nowHDRState)
 	{
 		m_needResetHDR = true;
-		needSaveOptions = true;
-	}
-	if (previousTearingState != nowTearingState)
-	{
-		needSaveOptions = true;
-	}
-	if (previousRayTracingState != nowRayTracingState)
-	{
-		needSaveOptions = true;
-	}
-	if (previousMeshShaderState != nowMeshShaderState)
-	{
-		needSaveOptions = true;
-	}
-	if (previousSoundState != nowSoundState)
-	{
-		needSaveOptions = true;
-	}
-
-	if (needSaveOptions)
-	{
-		SaveOptions();
 	}
 }
 
-void Sodo::CommonRenderGuiCheckExit(GameState from, GameState to)
+void Sodo::RenderGuiCheckExitCommon(GameState from, GameState to)
 {
 	ImGui::Dummy(m_imGuiSpacingSize);
 
-	if (ImGui::Button("No", m_imGuiSmallButtonSize))
+	bool noButtonClicked = ImGui::Button("No", m_imGuiSmallButtonSize);
+	if (noButtonClicked == true)
 	{
-		m_gameMode = from;
+		m_gameState = from;
 	}
 
 	ImGui::SameLine();
 
-	if (ImGui::Button("Yes", m_imGuiSmallButtonSize))
+	bool yesButtonClicked = ImGui::Button("Yes", m_imGuiSmallButtonSize);
+	if (yesButtonClicked == true)
 	{
 		if (to == GAME_STATE_TERMINATE)
 		{
@@ -341,7 +327,7 @@ void Sodo::CommonRenderGuiCheckExit(GameState from, GameState to)
 		}
 		else
 		{
-			m_gameMode = to;
+			m_gameState = to;
 		}
 	}
 }

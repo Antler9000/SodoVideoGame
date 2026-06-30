@@ -143,8 +143,7 @@ struct OptionMeshShader
 
 struct OptionSound
 {
-	bool userEnabled = true;
-	int mainVolume = 100;
+	int masterVolume = 100;
 	int uiVolume = 100;
 	int unitVolume = 100;
 	int effectVolume = 100;
@@ -152,7 +151,10 @@ struct OptionSound
 
 	bool IsActive() const
 	{
-		return IsSupported() && userEnabled;
+		bool isMasterSoundNotZero = (masterVolume != 0);
+		bool isAtLeastOneSoundNotZero = (uiVolume != 0) || (unitVolume != 0) || (effectVolume != 0) || (musicVolume != 0);
+
+		return IsSupported() && isMasterSoundNotZero && isAtLeastOneSoundNotZero;
 	}
 
 	bool IsSupported() const
@@ -165,22 +167,18 @@ struct OptionSound
 	void DebugPrint() const
 	{
 #ifdef _DEBUG
-		OutputDebugStringW(userEnabled ? L"[SODO DEBUG] Sound : 유저 활성화 On\n" : L"[SODO DEBUG]  : 유저 활성화 off\n");
-
 		wchar_t debugBuffer[128];
-
-		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : 메인 볼륨 %d%%\n", mainVolume);
+		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : 마스터 볼륨 %d%%\n", masterVolume);
 		OutputDebugStringW(debugBuffer);
-
 		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : UI 볼륨 %d%%\n", uiVolume);
 		OutputDebugStringW(debugBuffer);
-
-		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : 효과 볼륨 %d%%\n", unitVolume);
+		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : 유닛 볼륨 %d%%\n", unitVolume);
 		OutputDebugStringW(debugBuffer);
-
-		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : 음악 볼륨 %d%%\n", effectVolume);
+		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : 효과 볼륨 %d%%\n", effectVolume);
 		OutputDebugStringW(debugBuffer);
-
+		swprintf_s(debugBuffer, L"[SODO DEBUG] Sound : 음악 볼륨 %d%%\n", musicVolume);
+		OutputDebugStringW(debugBuffer);
+		OutputDebugStringW(IsActive() ? L"[SODO DEBUG] => Sound On \n" : L"[SODO DEBUG] => Sound Off \n");
 		OutputDebugStringW(L"\n");
 #endif
 	}

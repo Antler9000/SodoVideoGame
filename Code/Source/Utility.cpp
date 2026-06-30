@@ -1,5 +1,8 @@
 ﻿#include <windows.h>
 #include <dxgi.h>
+#include <string>
+#include <cstdio>
+#include <fstream>
 #include <stdexcept>
 #include "Sodo.h"
 #include "Debug.h"
@@ -11,11 +14,11 @@ void Sodo::WaitAllCommandDone()
 		return;
 	}
 
-	m_currentFence++;
+	m_fenceCurrent++;
 
-	ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_currentFence));
+	ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceCurrent));
 
-	ThrowIfFailed(m_fence->SetEventOnCompletion(m_currentFence, m_fenceEvent));
+	ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceCurrent, m_fenceEvent));
 	auto waitResult = WaitForSingleObject(m_fenceEvent, INFINITE);
 
 	if (waitResult != WAIT_OBJECT_0)
@@ -26,9 +29,9 @@ void Sodo::WaitAllCommandDone()
 
 void Sodo::ResetScreenSetting()
 {
-	if (m_needResetScreenMode)
+	if (m_needResetScreenMode == true)
 	{
-		if (m_optionFullScreen.userEnabled)
+		if (m_optionFullScreen.userEnabled == true)
 		{
 			SetFullScreenMode();
 		}
@@ -36,35 +39,37 @@ void Sodo::ResetScreenSetting()
 		{
 			SetWindowMode();
 		}
+
+		m_needResetScreenMode = false;
 	}
 
-	if (m_swapChain != nullptr)
+	if (m_screenSwapChain != nullptr)
 	{
 		WaitAllCommandDone();
 
-		for (int i = 0; i < m_backBufferCount; i++)
+		for (int i = 0; i < m_screenBackBufferCount; i++)
 		{
-			m_backBuffers[i].Reset();
+			m_screenBackBuffers[i].Reset();
 		}
 
 		ThrowIfFailed(
-			m_swapChain->ResizeBuffers(
+			m_screenSwapChain->ResizeBuffers(
 				0,
 				0,
 				0,
-				m_optionHDR.IsActive() ? m_backBufferFormatHDR : m_backBufferFormatSDR,
+				m_optionHDR.IsActive() ? m_screenBackBufferFormatHDR : m_screenBackBufferFormatSDR,
 				DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
 				| (m_optionTearing.featureSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0)
 			)
 		);
 
-		if (m_optionHDR.IsActive())
+		if (m_optionHDR.IsActive() == true)
 		{
-			m_swapChain->SetColorSpace1(m_backBufferColorSpaceHDR);
+			m_screenSwapChain->SetColorSpace1(m_screenBackBufferColorSpaceHDR);
 		}
 		else
 		{
-			m_swapChain->SetColorSpace1(m_backBufferColorSpaceSDR);
+			m_screenSwapChain->SetColorSpace1(m_screenBackBufferColorSpaceSDR);
 		}
 
 		InitBackBuffers();
@@ -77,7 +82,6 @@ void Sodo::ResetScreenSetting()
 	}
 
 	m_needResetHDR = false;
-	m_needResetScreenMode = false;
 }
 
 void Sodo::SetFullScreenMode()
@@ -137,5 +141,126 @@ void Sodo::SetWindowMode()
 
 void Sodo::SaveOptions()
 {
-	
+	std::ofstream fout("SavedSettingsTemp.txt", std::ios::out | std::ios::trunc);
+
+	if (!fout)
+	{
+		return;
+	}
+
+	fout << "FullScreen" << " " << (m_optionFullScreen.userEnabled ? "Yes" : "No") << '\n';
+	fout << "HDR" << " " << (m_optionHDR.userEnabled ? "Yes" : "No") << '\n';
+	fout << "Tearing" << " " << (m_optionTearing.userEnabled ? "Yes" : "No") << '\n';
+	fout << "RayTracing" << " " << (m_optionRayTracing.userEnabled ? "Yes" : "No") << '\n';
+	fout << "MeshShader" << " " << (m_optionMeshShader.userEnabled ? "Yes" : "No") << '\n';
+	fout << "SoundMasterVolume" << " " << m_optionSound.masterVolume << '\n';
+	fout << "SoundUIVolume" << " " << m_optionSound.uiVolume << '\n';
+	fout << "SoundUnitVolume" << " " << m_optionSound.unitVolume << '\n';
+	fout << "SoundEffectVolume" << " " << m_optionSound.effectVolume << '\n';
+	fout << "SoundMusicVolume" << " " << m_optionSound.musicVolume << '\n';
+
+	fout.close();
+
+	int removeResult = std::remove("SavedSettings.txt");
+	if (removeResult != 0)
+	{
+		return;
+	}
+
+	int renameResult = std::rename("SavedSettingsTemp.txt", "SavedSettings.txt");
+	if (renameResult != 0)
+	{
+		return;
+	}
+}
+
+void Sodo::RestoreOptions()
+{
+	std::ifstream fin("SavedSettings.txt", std::ios::in);
+
+	if (!fin)
+	{
+		return;
+	}
+
+	bool result = true;
+
+	bool fullScreenEnabledTemp = false;
+	bool hdrEnabledTemp = false;
+	bool tearingEnabledTemp = false;
+	bool rayTracingEnabledTemp = false;
+	bool meshShaderEnabledTemp = false;
+	int soundMasterVolumeTemp = 0;
+	int soundUIVolumeTemp = 0;
+	int soundUnitVolumeTemp = 0;
+	int soundEffectVolumeTemp = 0;
+	int soundMusicVolumeTemp = 0;
+
+	result &= ReadOptionBool(fin, "FullScreen", fullScreenEnabledTemp);
+	result &= ReadOptionBool(fin, "HDR", hdrEnabledTemp);
+	result &= ReadOptionBool(fin, "Tearing", tearingEnabledTemp);
+	result &= ReadOptionBool(fin, "RayTracing", rayTracingEnabledTemp);
+	result &= ReadOptionBool(fin, "MeshShader", meshShaderEnabledTemp);
+	result &= ReadOptionInt(fin, "SoundMasterVolume", soundMasterVolumeTemp);
+	result &= ReadOptionInt(fin, "SoundUIVolume", soundUIVolumeTemp);
+	result &= ReadOptionInt(fin, "SoundUnitVolume", soundUnitVolumeTemp);
+	result &= ReadOptionInt(fin, "SoundEffectVolume", soundEffectVolumeTemp);
+	result &= ReadOptionInt(fin, "SoundMusicVolume", soundMusicVolumeTemp);
+
+	if (result == false)
+	{
+		return;
+	}
+
+	m_optionFullScreen.userEnabled = fullScreenEnabledTemp;
+	m_optionHDR.userEnabled = hdrEnabledTemp;
+	m_optionTearing.userEnabled = tearingEnabledTemp;
+	m_optionRayTracing.userEnabled = rayTracingEnabledTemp;
+	m_optionMeshShader.userEnabled = meshShaderEnabledTemp;
+	m_optionSound.masterVolume = soundMasterVolumeTemp;
+	m_optionSound.uiVolume = soundUIVolumeTemp;
+	m_optionSound.unitVolume = soundUnitVolumeTemp;
+	m_optionSound.effectVolume = soundEffectVolumeTemp;
+	m_optionSound.musicVolume = soundMusicVolumeTemp;
+}
+
+bool Sodo::ReadOptionBool(std::ifstream& fin, std::string optionName, bool& outOptionEnabled)
+{
+	std::string buffer;
+
+	fin >> buffer;
+	if (buffer != optionName)
+	{
+		return false;
+	}
+
+	fin >> buffer;
+	if (buffer == "Yes")
+	{
+		outOptionEnabled = true;
+	}
+	else if (buffer == "No")
+	{
+		outOptionEnabled = false;
+	}
+	else
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Sodo::ReadOptionInt(std::ifstream& fin, std::string optionName, int& outOptionEnabled)
+{
+	std::string buffer;
+
+	fin >> buffer;
+	if (buffer != optionName)
+	{
+		return false;
+	}
+	fin >> outOptionEnabled;
+
+	return true;
 }
